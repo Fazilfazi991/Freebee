@@ -22,17 +22,16 @@ export default defineConfig((config) => {
       target: 'esnext',
     },
     plugins: [
-      !localNodeDev &&
-        nodePolyfills({
-          include: ['buffer', 'process', 'util', 'stream'],
-          globals: {
-            Buffer: true,
-            process: true,
-            global: true,
-          },
-          protocolImports: true,
-          exclude: ['child_process', 'fs', 'path'],
-        }),
+      nodePolyfills({
+        include: localNodeDev ? ['buffer'] : ['buffer', 'process', 'util', 'stream'],
+        globals: {
+          Buffer: true,
+          process: !localNodeDev,
+          global: !localNodeDev,
+        },
+        protocolImports: true,
+        exclude: ['child_process', 'fs', 'path'],
+      }),
       config.mode !== 'test' && !localNodeDev && remixCloudflareDevProxy(),
       remixVitePlugin({
         future: {

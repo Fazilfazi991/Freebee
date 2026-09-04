@@ -14,7 +14,7 @@
     "deploy": "npm run build && wrangler pages deploy",
     "build": "remix vite:build",
     "dev": "node pre-start.cjs  && remix vite:dev",
-    "dev:local": "remix vite:dev --mode localdev",
+    "dev:local": "remix vite:dev --mode localdev --host 127.0.0.1",
     "test": "vitest --run",
     "test:watch": "vitest",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint app",
