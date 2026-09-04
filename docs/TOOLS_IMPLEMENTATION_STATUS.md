@@ -30,3 +30,12 @@ Deterministic fixtures live in `test-fixtures/tools`. “Automated” records en
 | Image to Text | `/image-to-text` | Tesseract.js worker/WASM | Browser | Verified with local PNG OCR and text output |
 
 Incomplete tools remain explicitly marked as planned in the registry and are not sitemap-eligible: Compress PDF, MP4 to MP3, Remove Background, AI Image Generator, and UUID Generator.
+
+## WebCodecs media phase
+
+| Tool | Route | Engine | Status |
+| --- | --- | --- | --- |
+| Media Info | `/media-info` | Lazy Mediabunny parser | Chrome desktop verified with deterministic WAV: upload, metadata, reset, and second run pass |
+| MP4 to MP3 | `/mp4-to-mp3` | Optional LAME/WASM extension | Planned; separate approval required |
+
+Mediabunny replaces the rejected FFmpeg WASM proposal. No FFmpeg core or optional Mediabunny codec extension is installed. Trim, mute, audio extraction, MOV remux, and video compression remain planned until deterministic browser fixtures verify the exact sample-copy and WebCodecs paths.

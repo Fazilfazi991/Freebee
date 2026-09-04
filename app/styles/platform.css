@@ -976,6 +976,27 @@ body {
 .tp-result-stats strong {
   color: var(--tp-ink);
 }
+
+.tp-media-tool {
+  display: grid;
+  gap: 1rem;
+}
+
+.tp-media-tool .tp-upload {
+  width: 100%;
+  min-height: 12rem;
+}
+
+.tp-media-preview {
+  width: 100%;
+  max-height: 28rem;
+  border-radius: 0.9rem;
+  background: #0b1020;
+}
+
+.tp-media-tool audio {
+  width: 100%;
+}
 .tp-page-list {
   display: flex;
   flex-direction: column;

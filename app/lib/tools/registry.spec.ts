@@ -23,6 +23,7 @@ describe('tool registry', () => {
       'extract-pdf-pages',
       'add-page-numbers-to-pdf',
       'image-to-text',
+      'media-info',
     ];
     expected.forEach((slug) => expect(tools.find((tool) => tool.slug === slug)?.engine).toBe('browser'));
   });

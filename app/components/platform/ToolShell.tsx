@@ -10,6 +10,7 @@ import { QrGenerator } from './QrGenerator';
 import { BrowserFileTool } from './BrowserFileTool';
 import { AdvancedPdfTool } from './AdvancedPdfTool';
 import { OcrTool } from './OcrTool';
+import { MediaInfoTool } from './MediaInfoTool';
 
 export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -26,6 +27,7 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const isJson = tool.slug === 'json-formatter';
   const isQr = tool.slug === 'qr-generator';
   const isOcr = tool.slug === 'image-to-text';
+  const isMediaInfo = tool.slug === 'media-info';
   const isAdvancedPdf = [
     'pdf-to-jpg',
     'pdf-to-png',
@@ -61,6 +63,8 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
           <QrGenerator />
         ) : isOcr ? (
           <OcrTool />
+        ) : isMediaInfo ? (
+          <MediaInfoTool />
         ) : isAdvancedPdf ? (
           <AdvancedPdfTool tool={tool} />
         ) : hasBrowserFileEngine ? (

@@ -305,6 +305,23 @@ export const tools: ToolDefinition[] = [
     faq: commonFaq('Image to Text', true),
   },
   {
+    id: 'media-info',
+    name: 'Media Info',
+    slug: 'media-info',
+    description: 'Inspect video and audio metadata locally without uploading your file.',
+    category: 'video',
+    icon: 'Info',
+    keywords: ['media', 'metadata', 'codec', 'duration', 'video', 'audio'],
+    featured: true,
+    new: true,
+    requiresAuth: false,
+    premium: false,
+    engine: 'browser',
+    accept:
+      'video/mp4,video/quicktime,video/webm,audio/mp4,audio/mpeg,audio/ogg,audio/wav,audio/webm,audio/flac,audio/aac',
+    faq: commonFaq('Media Info', true),
+  },
+  {
     id: 'mp4-to-mp3',
     name: 'MP4 to MP3',
     slug: 'mp4-to-mp3',

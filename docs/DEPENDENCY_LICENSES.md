@@ -12,5 +12,6 @@ Existing packages used by this surface:
 | `jszip` 3.10.1 | https://github.com/Stuk/jszip | MIT or GPL-3.0-or-later (dual-licensed; used under MIT) | Existing dependency, lazy-loaded to bundle multi-file split-PDF results into one download. |
 | `pdfjs-dist` 5.7.284 | https://github.com/mozilla/pdf.js | Apache-2.0 | Lazy browser-side PDF rendering for thumbnails and image export; its worker is loaded only by PDF rendering tools. |
 | `tesseract.js` 7.0.0 | https://github.com/naptha/tesseract.js | Apache-2.0 | Lazy browser/WASM OCR with an English model and explicit worker termination. |
+| `mediabunny` 1.55.6 | https://github.com/Vanilagy/mediabunny | MPL-2.0 | Lazy, WebCodecs-first browser media inspection and future capability-gated remux/transcode operations. The library is used unmodified; its license and notices must be retained. |
 
 Any future dependency must be recorded here before it is added. Permissive MIT, Apache-2.0, and BSD licenses are preferred for this commercial product.
