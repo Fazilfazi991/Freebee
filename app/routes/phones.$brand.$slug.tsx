@@ -210,6 +210,10 @@ export default function Detail() {
               <dd>{p.source.region}</dd>
               <dt>Last checked</dt>
               <dd>{new Date(p.source.lastCheckedAt).toLocaleDateString()}</dd>
+              <dt>Parser</dt>
+              <dd>{p.parserVersion}</dd>
+              <dt>Publication state</dt>
+              <dd>{p.publicationState}</dd>
               <dt>Data limitation</dt>
               <dd>Only facts published on the cited regional page are included. Unknown fields are not inferred.</dd>
             </dl>

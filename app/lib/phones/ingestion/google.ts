@@ -1,8 +1,14 @@
 import { parseNumberUnit, parseRefreshRate, parseResolution, parseStorageOptions } from '~/lib/phones/normalization';
 import type { BrandExtractor } from './types';
+import { ModelScopeError, scopeByExplicitModel, toPlainText } from './scoping';
 
-export const extractGoogle: BrandExtractor = (html) => {
-  const t = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+export const extractGoogle: BrandExtractor = (html, options) => {
+  if (!options?.model && /Pixel\s+\d+\s+Pro\s+XL/i.test(toPlainText(html))) {
+    throw new ModelScopeError('Google multi-model extraction requires an explicit model.');
+  }
+
+  const scoped = scopeByExplicitModel(html, options?.model);
+  const t = toPlainText(scoped.html);
   const resolution = parseResolution(t);
 
   return {
@@ -19,5 +25,8 @@ export const extractGoogle: BrandExtractor = (html) => {
     },
     evidence: { display: { section: 'Display', text: t.match(/Display[\s\S]{0,240}/i)?.[0] ?? '' } },
     unsupported: [],
+    parserVersion: 'google-parser-v2',
+    modelScopeEvidence: scoped.evidence,
+    ambiguous: scoped.ambiguous,
   };
 };

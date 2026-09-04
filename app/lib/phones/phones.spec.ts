@@ -3,7 +3,9 @@ import { extractApple } from './ingestion/apple';
 import { extractGoogle } from './ingestion/google';
 import { extractSamsung } from './ingestion/samsung';
 import { parseRefreshRate, parseResolution, parseStorageOptions } from './normalization';
-import { phoneRepository } from './repository';
+import { phoneRepository, SnapshotPhoneRepository } from './repository';
+import { JsonSnapshotPhoneStore } from './persistence';
+import { curatedComparison } from './comparisons';
 import { validatePhone } from './validation';
 import type { Phone } from './schema';
 import { changedFields, hashNormalizedSource } from './change-detection';
@@ -24,11 +26,14 @@ describe('brand extractors', () => {
     ).toBe(177));
   it('extracts Samsung facts', () =>
     expect(
-      extractSamsung('<h1>Galaxy S26</h1><p>6.3 inch 120Hz 4300 mAh 167 g 256GB</p>').fields['battery.capacityMah'],
+      extractSamsung(
+        '<section data-model="galaxy-s26"><h1>Galaxy S26</h1><p>6.3 inch 120Hz 4300 mAh 167 g 256GB</p></section>',
+        { model: 'galaxy-s26' },
+      ).fields['battery.capacityMah'],
     ).toBe(4300));
   it('extracts Google facts', () =>
     expect(
-      extractGoogle('<h1>Pixel 10</h1><p>6.3-inch 1080 x 2424 60-120Hz 4970mAh 204g</p>').fields[
+      extractGoogle('<h1>Pixel 10</h1><p>6.3-inch 1080 x 2424 60-120Hz 4970mAh 204g</p>', { model: 'Pixel 10' }).fields[
         'display.resolutionWidth'
       ],
     ).toBe(1080));
@@ -42,10 +47,17 @@ describe('provenance and validation', () => {
   });
   it('flags impossible values', () => {
     const bad = { ...phoneRepository.getPhones()[0], dimensions: { weightG: 3 } } as Phone;
-    expect(validatePhone(bad)[0].field).toBe('dimensions.weightG');
+    expect(validatePhone(bad)[0]).toMatchObject({ field: 'dimensions.weightG', severity: 'critical' });
   });
 });
 describe('repository comparison and finder', () => {
+  it('returns published records only', () => {
+    const published = phoneRepository.getPhones()[0];
+    const draft = { ...published, id: 'draft', slug: 'draft', publicationState: 'draft' as const };
+    expect(new SnapshotPhoneRepository(new JsonSnapshotPhoneStore([published, draft])).getPhones()).toEqual([
+      published,
+    ]);
+  });
   it('keeps missing fields explicit', () =>
     expect(phoneRepository.comparePhones(['iphone-17', 'galaxy-s26'])).toHaveLength(2));
   it('combines filters', () => {
@@ -54,6 +66,13 @@ describe('repository comparison and finder', () => {
   });
   it('supports natural search tokens', () =>
     expect(phoneRepository.findPhones({ query: 'samsung 256gb' }).length).toBeGreaterThan(0));
+});
+
+describe('comparison indexing', () => {
+  it('allowlists curated pairs and rejects arbitrary pairs', () => {
+    expect(curatedComparison('iphone-17-vs-galaxy-s26')).toBeDefined();
+    expect(curatedComparison('iphone-17-vs-everything')).toBeUndefined();
+  });
 });
 
 describe('source change detection', () => {

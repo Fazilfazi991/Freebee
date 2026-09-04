@@ -21,21 +21,27 @@ export default function Finder() {
   const [esim, setEsim] = useState(false);
   const [nfc, setNfc] = useState(false);
   const [ip, setIp] = useState('');
-  const results = useMemo(
-    () =>
-      phoneRepository.findPhones({
-        brand: (brand as PhoneBrand) || undefined,
-        minDisplay: Number(minDisplay) || undefined,
-        minRefreshRate: Number(refresh) || undefined,
-        storageGb: Number(storage) || undefined,
-        maxWeightG: Number(weight) || undefined,
-        minBatteryMah: Number(battery) || undefined,
-        esim: esim || undefined,
-        nfc: nfc || undefined,
-        ipRating: ip || undefined,
-      }),
-    [brand, minDisplay, refresh, storage, weight, battery, esim, nfc, ip],
-  );
+  const [sort, setSort] = useState('model');
+  const results = useMemo(() => {
+    const matches = phoneRepository.findPhones({
+      brand: (brand as PhoneBrand) || undefined,
+      minDisplay: Number(minDisplay) || undefined,
+      minRefreshRate: Number(refresh) || undefined,
+      storageGb: Number(storage) || undefined,
+      maxWeightG: Number(weight) || undefined,
+      minBatteryMah: Number(battery) || undefined,
+      esim: esim || undefined,
+      nfc: nfc || undefined,
+      ipRating: ip || undefined,
+    });
+    return [...matches].sort((a, b) =>
+      sort === 'weight'
+        ? (a.dimensions.weightG ?? Infinity) - (b.dimensions.weightG ?? Infinity)
+        : sort === 'display'
+          ? (b.display.sizeInches ?? 0) - (a.display.sizeInches ?? 0)
+          : a.model.localeCompare(b.model),
+    );
+  }, [brand, minDisplay, refresh, storage, weight, battery, esim, nfc, ip, sort]);
 
   return (
     <PhoneChrome>
@@ -47,6 +53,14 @@ export default function Finder() {
         <div className="ph-finder">
           <aside>
             <h2>Filters</h2>
+            <label>
+              Sort results
+              <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                <option value="model">Model name</option>
+                <option value="weight">Lightest first</option>
+                <option value="display">Largest display</option>
+              </select>
+            </label>
             <label>
               Brand
               <select value={brand} onChange={(e) => setBrand(e.target.value)}>
@@ -121,6 +135,7 @@ export default function Finder() {
                 setEsim(false);
                 setNfc(false);
                 setIp('');
+                setSort('model');
               }}
             >
               Clear filters

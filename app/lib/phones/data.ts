@@ -19,6 +19,8 @@ type Seed = Omit<
   | 'source'
   | 'provenance'
   | 'quality'
+  | 'publicationState'
+  | 'parserVersion'
   | 'design'
   | 'dimensions'
   | 'display'
@@ -65,6 +67,10 @@ const make = (x: Seed): Phone => {
     variantName: x.variantName,
     releaseDate: x.releaseDate,
     quality: x.quality ?? 'verified',
+    publicationState: x.publicationState ?? 'published',
+    parserVersion:
+      x.parserVersion ??
+      (x.brand === 'apple' ? 'apple-parser-v2' : x.brand === 'samsung' ? 'samsung-parser-v2' : 'google-parser-v2'),
     source: {
       manufacturer,
       officialUrl: x.url,

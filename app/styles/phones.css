@@ -485,9 +485,20 @@
   width: 100%;
   font-size: 1rem;
 }
-.ph-pickers > span {
-  padding-bottom: 0.8rem;
+.ph-swap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0.6rem 0.75rem;
   color: var(--ph-muted);
+  background: transparent;
+  border: 1px solid var(--ph-line);
+  border-radius: 10px;
+  font-weight: 700;
+}
+.ph-swap svg {
+  width: 17px;
 }
 .ph-compare-table {
   overflow: hidden;

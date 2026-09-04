@@ -1,10 +1,11 @@
 # Phone ingestion
 
-Run `pnpm phones:ingest --brand apple|samsung|google --dry-run`. Optional `--model` narrows a source URL where the configured URL contains the model token. The fetcher uses an identifiable user agent, 15-second timeout, two attempts, backoff, sequential requests, and a delay between sources.
+Run `pnpm phones:ingest --brand apple|samsung|google --dry-run`. Optional `--model` selects exactly one configured model. Non-dry execution is refused until a reviewed writable store exists.
 
-The POC command intentionally reports response metadata and does not persist downloaded HTML or mutate published data. This makes review the required gate. Small sanitized fixtures under `test-fixtures/phones` exercise parsers without network access.
+Preflight fetches `robots.txt`, checks public accessibility, HTTP status, content type and declared/body size, and detects common CAPTCHA/access-denied responses. Product fetches use an identifiable user agent, 15-second timeout, one retry with exponential backoff, sequential execution, and a 2 MB ceiling. HTTP 403/429 stop immediately.
 
-Each brand has a separate extractor under `app/lib/phones/ingestion`. Productionizing ingestion should add HTML sanitization, section/model scoping, normalized-content SHA-256 hashing, field diff output, snapshot retention policy, robots/terms preflight, and explicit approval before writing normalized records.
+Dry run reports URL, robots URL, HTTP status, SHA-256 source hash, parser version, extracted-field summary, warnings, pending changes, publication eligibility, and `persisted: false`. It never writes downloaded HTML or normalized production data.
+
+Each brand has a separate versioned extractor under `app/lib/phones/ingestion`. Changed hashes produce field-level pending changes. Critical validation failures prevent publication; large or unexpected changes remain `awaiting-review`.
 
 Suggested cadence: recent products every 2–3 days, current weekly, archived monthly. Fetch sequentially and stop on access restrictions or sustained errors. A future `normalizeSpecText` provider may propose transformations from supplied evidence, but is intentionally unimplemented and cannot fill missing facts.
-

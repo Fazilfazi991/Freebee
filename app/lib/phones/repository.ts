@@ -1,5 +1,5 @@
-import { phones } from './data';
-import type { Phone, PhoneBrand, PhoneFilters } from './schema';
+import { JsonSnapshotPhoneStore, type PhoneDataStore } from '~/lib/phones/persistence';
+import type { Phone, PhoneBrand, PhoneFilters } from '~/lib/phones/schema';
 
 export interface PhoneRepository {
   getPhone(brand: string, slug: string): Phone | undefined;
@@ -12,11 +12,18 @@ export interface PhoneRepository {
 const searchable = (p: Phone) =>
   `${p.brand} ${p.model} ${p.memory.storageOptionsGb.map((x) => `${x}gb`).join(' ')} ${p.display.refreshRateMaxHz ? `${p.display.refreshRateMaxHz}hz phone` : ''}`.toLowerCase();
 export class SnapshotPhoneRepository implements PhoneRepository {
+  constructor(private readonly _store: PhoneDataStore = new JsonSnapshotPhoneStore()) {}
   getPhone(brand: string, slug: string) {
-    return phones.find((p) => p.brand === brand && p.slug === slug);
+    if (!['apple', 'samsung', 'google'].includes(brand)) {
+      return undefined;
+    }
+
+    const phone = this._store.getByIdentity(brand as PhoneBrand, slug);
+
+    return phone?.publicationState === 'published' ? phone : undefined;
   }
   getPhones() {
-    return phones.filter((p) => p.quality !== 'needs-review');
+    return this._store.list().filter((p) => p.publicationState === 'published');
   }
   getPhonesByBrand(brand: PhoneBrand) {
     return this.getPhones().filter((p) => p.brand === brand);

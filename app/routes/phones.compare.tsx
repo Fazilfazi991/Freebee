@@ -1,5 +1,6 @@
 import type { MetaFunction } from '@remix-run/cloudflare';
 import { useSearchParams } from '@remix-run/react';
+import { ArrowLeftRight } from 'lucide-react';
 import { PhoneChrome, phoneLinks } from '~/components/phones/PhoneChrome';
 import { platformConfig } from '~/config/platform';
 import { format } from '~/lib/phones/format';
@@ -21,6 +22,7 @@ export default function Compare() {
     n.set(key, value);
     setParams(n);
   };
+  const swap = () => setParams({ a: b.slug, b: a.slug });
   const rows = [
     ['Display', format.display(a.display.sizeInches), format.display(b.display.sizeInches)],
     ['Technology', a.display.technology, b.display.technology],
@@ -67,7 +69,10 @@ export default function Compare() {
               ))}
             </select>
           </label>
-          <span>versus</span>
+          <button className="ph-swap" type="button" onClick={swap} aria-label="Swap compared phones">
+            <ArrowLeftRight />
+            <span>Swap</span>
+          </button>
           <label>
             Phone B
             <select value={b.slug} onChange={(e) => set('b', e.target.value)}>

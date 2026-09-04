@@ -5,5 +5,11 @@ export interface ExtractedFacts {
   fields: Record<string, unknown>;
   evidence: Record<string, { section: string; text: string }>;
   unsupported: string[];
+  parserVersion: string;
+  modelScopeEvidence: string;
+  ambiguous: boolean;
 }
-export type BrandExtractor = (html: string) => ExtractedFacts;
+export interface ExtractorOptions {
+  model?: string;
+}
+export type BrandExtractor = (html: string, options?: ExtractorOptions) => ExtractedFacts;

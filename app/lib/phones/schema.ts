@@ -1,5 +1,6 @@
 export type PhoneBrand = 'apple' | 'samsung' | 'google';
 export type DataQuality = 'verified' | 'partial' | 'needs-review';
+export type PublicationState = 'draft' | 'verified' | 'partial' | 'needs-review' | 'published';
 
 export interface Provenance {
   sourceUrl: string;
@@ -25,6 +26,8 @@ export interface Phone {
   releaseDate?: string;
   discontinued?: boolean;
   quality: DataQuality;
+  publicationState: PublicationState;
+  parserVersion: string;
   source: {
     manufacturer: string;
     officialUrl: string;

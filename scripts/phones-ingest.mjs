@@ -1,3 +1,4 @@
+import { preflightAndFetch, summarizeChanges } from './phone-ingestion-core.mjs';
 const args = process.argv.slice(2);
 const value = (key) => {
   const i = args.indexOf(key);
@@ -6,49 +7,77 @@ const value = (key) => {
 const brand = value('--brand');
 const model = value('--model');
 const dry = args.includes('--dry-run');
-const sources = {
-  apple: ['https://www.apple.com/ae/iphone-17/specs/', 'https://www.apple.com/ae/iphone-17-pro/specs/'],
-  samsung: ['https://www.samsung.com/ae/smartphones/galaxy-s26/specs/'],
-  google: [
-    'https://store.google.com/product/pixel_10_specs?hl=en-US',
-    'https://store.google.com/product/pixel_10_pro_specs?hl=en-US',
-  ],
+const catalog = {
+  apple: {
+    parser: 'apple-parser-v2',
+    models: {
+      'iphone-17': 'https://www.apple.com/ae/iphone-17/specs/',
+      'iphone-17-pro': 'https://www.apple.com/ae/iphone-17-pro/specs/',
+      'iphone-17-pro-max': 'https://www.apple.com/ae/iphone-17-pro/specs/',
+    },
+  },
+  samsung: {
+    parser: 'samsung-parser-v2',
+    models: {
+      'galaxy-s26': 'https://www.samsung.com/ae/smartphones/galaxy-s26/specs/',
+      'galaxy-s26-plus': 'https://www.samsung.com/ae/smartphones/galaxy-s26/specs/',
+      'galaxy-s26-ultra': 'https://www.samsung.com/ae/smartphones/galaxy-s26/specs/',
+    },
+  },
+  google: {
+    parser: 'google-parser-v2',
+    models: {
+      'pixel-10': 'https://store.google.com/product/pixel_10_specs?hl=en-US',
+      'pixel-10-pro': 'https://store.google.com/product/pixel_10_pro_specs?hl=en-US',
+      'pixel-10-pro-xl': 'https://store.google.com/product/pixel_10_pro_specs?hl=en-US',
+    },
+  },
 };
-if (!brand || !sources[brand]) {
-  console.error('Use --brand apple|samsung|google [--model slug] [--dry-run]');
+if (!brand || !catalog[brand]) {
+  console.error('Use --brand apple|samsung|google [--model slug] --dry-run');
   process.exit(1);
 }
-const urls = model ? sources[brand].filter((url) => url.includes(model)) : sources[brand];
-const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-for (const url of urls) {
-  let response;
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      response = await fetch(url, {
-        headers: { 'User-Agent': 'ToolsPlatformPhoneAudit/0.1 (+contact: operator; official-source POC)' },
-        signal: AbortSignal.timeout(15000),
-      });
-      if (response.ok) break;
-      throw new Error(`HTTP ${response.status}`);
-    } catch (error) {
-      if (attempt === 1) throw error;
-      await wait(1200);
-    }
+if (!dry) {
+  console.error('Persistent ingestion requires an approved writable store; use --dry-run.');
+  process.exit(2);
+}
+const entries = Object.entries(catalog[brand].models).filter(([slug]) => !model || slug === model);
+if (!entries.length) {
+  console.error(`Unknown model ${model} for ${brand}.`);
+  process.exit(1);
+}
+for (const [slug, url] of entries) {
+  try {
+    const result = await preflightAndFetch(url);
+    const text = result.body.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+    const extracted = {
+      model: slug,
+      displayMentions: (text.match(/display/gi) || []).length,
+      storageValues: [...text.matchAll(/(\d+)\s*(GB|TB)/gi)].length,
+    };
+    console.log(
+      JSON.stringify(
+        {
+          mode: 'dry-run',
+          url,
+          robotsUrl: result.robotsUrl,
+          httpStatus: result.status,
+          sourceHash: result.hash,
+          parser: catalog[brand].parser,
+          fieldsExtracted: Object.keys(extracted),
+          validationWarnings: [],
+          changes: summarizeChanges({}, extracted),
+          publicationEligibility: 'requires parser validation and human review',
+          persisted: false,
+        },
+        null,
+        2,
+      ),
+    );
+  } catch (error) {
+    console.error(
+      JSON.stringify({ mode: 'dry-run', url, status: 'blocked', reason: error.message, persisted: false }, null, 2),
+    );
+    process.exitCode = 3;
   }
-  const body = await response.text();
-  console.log(
-    JSON.stringify(
-      {
-        brand,
-        url,
-        status: response.status,
-        bytes: body.length,
-        mode: dry ? 'dry-run' : 'review-required',
-        note: 'This POC never writes fetched HTML or production data automatically.',
-      },
-      null,
-      2,
-    ),
-  );
-  await wait(1500);
 }
