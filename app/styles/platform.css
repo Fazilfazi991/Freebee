@@ -997,6 +997,23 @@ body {
 .tp-media-tool audio {
   width: 100%;
 }
+
+.tp-utility {
+  display: grid;
+  gap: 1rem;
+}
+
+.tp-utility textarea {
+  width: 100%;
+  min-height: 10rem;
+  resize: vertical;
+  overflow: auto;
+}
+
+.tp-utility label {
+  display: grid;
+  gap: 0.45rem;
+}
 .tp-page-list {
   display: flex;
   flex-direction: column;

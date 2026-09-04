@@ -39,3 +39,9 @@ Incomplete tools remain explicitly marked as planned in the registry and are not
 | MP4 to MP3 | `/mp4-to-mp3` | Optional LAME/WASM extension | Planned; separate approval required |
 
 Mediabunny replaces the rejected FFmpeg WASM proposal. No FFmpeg core or optional Mediabunny codec extension is installed. Trim, mute, audio extraction, MOV remux, and video compression remain planned until deterministic browser fixtures verify the exact sample-copy and WebCodecs paths.
+
+## Native utility phase
+
+The following dependency-free routes are implemented with native browser APIs and are sitemap-eligible: `/uuid-generator`, `/base64-encoder`, `/base64-decoder`, `/url-encoder`, `/url-decoder`, `/jwt-decoder`, `/hash-generator`, `/timestamp-converter`, `/word-counter`, `/character-counter`, `/text-case-converter`, `/json-validator`, and `/password-generator`.
+
+CSV conversion and invoice, quotation, and signature generation remain planned for the next batch; they were not represented as working without their required shared parser/document UX and browser verification.

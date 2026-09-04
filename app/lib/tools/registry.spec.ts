@@ -24,6 +24,19 @@ describe('tool registry', () => {
       'add-page-numbers-to-pdf',
       'image-to-text',
       'media-info',
+      'uuid-generator',
+      'base64-encoder',
+      'base64-decoder',
+      'url-encoder',
+      'url-decoder',
+      'jwt-decoder',
+      'hash-generator',
+      'timestamp-converter',
+      'word-counter',
+      'character-counter',
+      'text-case-converter',
+      'json-validator',
+      'password-generator',
     ];
     expected.forEach((slug) => expect(tools.find((tool) => tool.slug === slug)?.engine).toBe('browser'));
   });

@@ -56,6 +56,8 @@ OCR is isolated behind `OcrTool`. Tesseract.js, its worker, WebAssembly runtime,
 
 Browser media follows a WebCodecs-first strategy through Mediabunny; the GPL FFmpeg WASM core is not used. Media code is isolated under `app/lib/tools/media` and dynamically imported only by media workspaces. Container support never implies codec support: future remux and transcode actions must query the current browser before enabling an output. `MediaInfoTool` is the first low-risk integration and disposes every input after inspection.
 
+Developer and text utilities share pure transformations under `app/lib/tools/utilities` and the `UtilityTool` workspace. Unicode-safe Base64 uses `TextEncoder`/`TextDecoder`; hashes use Web Crypto; UUIDs and passwords use cryptographically secure browser randomness. JWT handling decodes only and never claims signature validity. No input text, token, hash, password, or generated value is sent to analytics.
+
 ## File limits and downloads
 
 Limits are centralized in `app/lib/tools/limits.ts`: 20 files, 25 MB per file, 100 MB per session, and 40 megapixels per output image. These are defensive browser limits, not claims about every device's capacity. Generated files use `downloadBlob`, deterministic sanitized names, and delayed Blob URL revocation. Preview URLs and image bitmaps are released when replaced or unmounted; temporary canvases are cleared after encoding.

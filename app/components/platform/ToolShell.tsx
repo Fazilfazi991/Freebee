@@ -11,6 +11,7 @@ import { BrowserFileTool } from './BrowserFileTool';
 import { AdvancedPdfTool } from './AdvancedPdfTool';
 import { OcrTool } from './OcrTool';
 import { MediaInfoTool } from './MediaInfoTool';
+import { UtilityTool } from './UtilityTool';
 
 export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -28,6 +29,21 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const isQr = tool.slug === 'qr-generator';
   const isOcr = tool.slug === 'image-to-text';
   const isMediaInfo = tool.slug === 'media-info';
+  const isUtility = [
+    'uuid-generator',
+    'base64-encoder',
+    'base64-decoder',
+    'url-encoder',
+    'url-decoder',
+    'jwt-decoder',
+    'hash-generator',
+    'timestamp-converter',
+    'word-counter',
+    'character-counter',
+    'text-case-converter',
+    'json-validator',
+    'password-generator',
+  ].includes(tool.slug);
   const isAdvancedPdf = [
     'pdf-to-jpg',
     'pdf-to-png',
@@ -65,6 +81,8 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
           <OcrTool />
         ) : isMediaInfo ? (
           <MediaInfoTool />
+        ) : isUtility ? (
+          <UtilityTool slug={tool.slug} />
         ) : isAdvancedPdf ? (
           <AdvancedPdfTool tool={tool} />
         ) : hasBrowserFileEngine ? (
