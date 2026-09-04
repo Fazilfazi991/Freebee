@@ -1,28 +1,134 @@
-import { json, type MetaFunction } from '@remix-run/cloudflare';
-import { ClientOnly } from 'remix-utils/client-only';
-import { BaseChat } from '~/components/chat/BaseChat';
-import { Chat } from '~/components/chat/Chat.client';
-import { Header } from '~/components/header/Header';
-import BackgroundRays from '~/components/ui/BackgroundRays';
+import type { LinksFunction, MetaFunction } from '@remix-run/cloudflare';
+import { Link } from '@remix-run/react';
+import { ArrowRight, Check, Globe2, ShieldCheck, Sparkles, Zap } from 'lucide-react';
+import { PlatformLayout, platformLinks } from '~/components/platform/PlatformLayout';
+import { GlobalToolSearch } from '~/components/platform/ToolSearch';
+import { ToolCard } from '~/components/platform/ToolCard';
+import { ToolIcon } from '~/components/platform/Icon';
+import { platformConfig } from '~/config/platform';
+import { categories, tools } from '~/lib/tools/registry';
 
-export const meta: MetaFunction = () => {
-  return [{ title: 'Bolt' }, { name: 'description', content: 'Talk with Bolt, an AI assistant from StackBlitz' }];
-};
+export const links: LinksFunction = platformLinks;
+export const meta: MetaFunction = () => [
+  { title: `${platformConfig.name} — Useful tools, one calm workspace` },
+  { name: 'description', content: platformConfig.description },
+  { property: 'og:title', content: platformConfig.name },
+  { property: 'og:description', content: platformConfig.description },
+  { name: 'twitter:card', content: 'summary_large_image' },
+];
 
-export const loader = () => json({});
-
-/**
- * Landing page component for Bolt
- * Note: Settings functionality should ONLY be accessed through the sidebar menu.
- * Do not add settings button/panel to this landing page as it was intentionally removed
- * to keep the UI clean and consistent with the design system.
- */
-export default function Index() {
+export default function PlatformHome() {
+  const featured = tools.filter((tool) => tool.featured).slice(0, 10);
   return (
-    <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
-      <BackgroundRays />
-      <Header />
-      <ClientOnly fallback={<BaseChat />}>{() => <Chat />}</ClientOnly>
-    </div>
+    <PlatformLayout>
+      <section className="tp-hero">
+        <div className="tp-hero-copy">
+          <h1>Everything you need, in one browser.</h1>
+          <p>Convert, compress, create, edit, and use AI tools from a single, considered workspace.</p>
+          <GlobalToolSearch />
+          <div className="tp-popular">
+            <span>Popular:</span>
+            {featured.slice(0, 4).map((tool) => (
+              <Link key={tool.id} to={`/${tool.slug}`}>
+                {tool.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <div className="tp-hero-panel" aria-label="Platform capabilities">
+          <div className="tp-orbit">
+            <span>
+              <ToolIcon name="FileText" size={24} />
+            </span>
+            <span>
+              <ToolIcon name="Image" size={24} />
+            </span>
+            <span>
+              <ToolIcon name="Braces" size={24} />
+            </span>
+            <div>
+              <strong>{tools.length}</strong>
+              <small>
+                useful tools,
+                <br />
+                growing carefully
+              </small>
+            </div>
+          </div>
+          <p>
+            <Check size={17} /> Two tools work today. The rest are honest previews.
+          </p>
+        </div>
+      </section>
+      <section id="categories" className="tp-section tp-categories">
+        <div className="tp-section-head">
+          <h2>Find your starting point</h2>
+          <p>Eight practical collections, shaped around the job in front of you.</p>
+        </div>
+        <div className="tp-category-grid">
+          {categories.map((category) => (
+            <Link key={category.id} to={`/${category.id}`}>
+              <span>
+                <ToolIcon name={category.icon} />
+              </span>
+              <strong>{category.name}</strong>
+              <p>{category.description}</p>
+              <ArrowRight size={18} />
+            </Link>
+          ))}
+        </div>
+      </section>
+      <section className="tp-section">
+        <div className="tp-section-head">
+          <h2>Popular tools</h2>
+          <Link to="/tools">
+            Browse all tools <ArrowRight size={17} />
+          </Link>
+        </div>
+        <div className="tp-tool-grid">
+          {featured.map((tool) => (
+            <ToolCard key={tool.id} tool={tool} />
+          ))}
+        </div>
+      </section>
+      <section className="tp-section tp-why">
+        <div>
+          <h2>A quieter way to get small things done.</h2>
+          <p>No installation maze. No overloaded dashboards. Just focused tools with clear boundaries.</p>
+        </div>
+        <div className="tp-principles">
+          <article>
+            <Zap />
+            <h3>Fast by default</h3>
+            <p>Light interfaces now, with heavier engines loaded only where they belong.</p>
+          </article>
+          <article>
+            <ShieldCheck />
+            <h3>Clear about privacy</h3>
+            <p>Every tool will explain whether work stays local or needs a server.</p>
+          </article>
+          <article>
+            <Globe2 />
+            <h3>Ready everywhere</h3>
+            <p>Built for touch, keyboard, small screens, and wide desktops.</p>
+          </article>
+          <article>
+            <Sparkles />
+            <h3>Useful before clever</h3>
+            <p>AI sits alongside everyday utilities, never in the way of them.</p>
+          </article>
+        </div>
+      </section>
+      <section className="tp-discover">
+        <h2>Your next task is probably already here.</h2>
+        <p>
+          Search the catalog or explore a category. New engines can be added without rebuilding the platform around
+          them.
+        </p>
+        <Link className="tp-primary" to="/tools">
+          Explore all tools <ArrowRight size={18} />
+        </Link>
+      </section>
+    </PlatformLayout>
   );
 }

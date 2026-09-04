@@ -1,0 +1,61 @@
+# Tools Platform architecture
+
+## Overview
+
+The public tools platform is an isolated Remix surface inside the existing React application. The existing AI website builder remains available at `/builder`; its chat, workbench, API, deployment, and persistence modules are unchanged.
+
+Brand and company values live in `app/config/platform.ts`. Replace that one object when a final name, domain, social profiles, or palette is selected.
+
+## Routes
+
+- `/` — public platform homepage
+- `/tools` — complete registry-driven directory
+- `/pdf`, `/image`, `/video`, `/audio`, `/business`, `/developer`, `/ai`, `/web` — reusable category pages
+- `/:slug` — registry-backed tool or category route with a real 404 for unknown entries
+- `/builder` — preserved AI website builder
+- `/sitemap.xml` — homepage, directory, categories, and only tools with working engines
+
+The dynamic route means a tool becomes routable when it is added to the registry; no page file needs to be duplicated.
+
+## Component architecture
+
+- `PlatformLayout` owns public header, responsive navigation, footer, and global search access.
+- `CategoryPage` filters and displays any category supplied from the registry.
+- `ToolShell` owns breadcrumbs, identity, workspace, privacy disclosure, engine status, supporting copy, related tools, and FAQ.
+- `ToolCard`, `ToolIcon`, and `GlobalToolSearch` render registry data consistently.
+- `JsonFormatter` and `QrGenerator` are browser-side engines.
+- `AdSlot` is disabled by default and renders nothing until explicitly enabled.
+
+## Tool registry
+
+`app/lib/tools/registry.ts` is the source of truth for names, slugs, descriptions, categories, icons, keywords, discovery flags, authentication and premium intent, accepted files, engine readiness, and FAQs. Homepage discovery, directory cards, category pages, search, related tools, route resolution, metadata, and sitemap preparation derive from it.
+
+### Adding a tool
+
+1. Add one `ToolDefinition` to `tools` in the registry.
+2. Use a unique `id` and top-level `slug`.
+3. State `engine: 'browser'` only when real processing and result handling are implemented and tested; otherwise use `planned`.
+4. Add a focused workspace component when the generic file workspace is insufficient, then select it inside `ToolShell`.
+5. Add the tool to the sitemap only after it provides genuine utility and useful indexed content. The current sitemap does this automatically via engine status.
+
+## ToolShell and processing states
+
+The shell separates platform presentation from engines. Planned file tools support idle and selected-file states and explicitly say that processing is unavailable. They never simulate success or create fake downloads. Engine adapters should later expose idle, ready, processing/progress, error, result/download, and reset states to the shell.
+
+Heavy PDF, image, video, OCR, and AI engines should be dynamically imported from their tool workspace so they never enter global bundles. Browser processing is preferred for small, safe operations. Server or worker processing is appropriate for codecs, large jobs, secret-bearing AI calls, and operations that need durable queues.
+
+## SEO strategy
+
+Tool and category metadata is generated from registry content. Routes support unique titles, descriptions, canonicals, Open Graph and Twitter fields, semantic headings, breadcrumbs, useful explanatory copy, and FAQ content. Add JSON-LD for WebApplication, BreadcrumbList, and FAQPage when final domain and production content are approved. Unfinished tools are deliberately excluded from the sitemap to avoid thin-page indexing.
+
+## Future identity, access, and monetization
+
+Free browser utilities do not depend on authentication. A future identity boundary can wrap history, favorites, storage, batch work, larger limits, and credits without changing tool definitions. The `requiresAuth` and `premium` fields express future availability, not an enforced payment system. `AdSlot` reserves a safe, non-interactive boundary below workspaces or between content sections and is off by default.
+
+## Analytics
+
+`app/lib/analytics.ts` defines stable event names and emits a provider-neutral browser event. A future adapter may consume `tool_view`, `tool_upload`, `tool_process_started`, `tool_process_completed`, `tool_download`, `tool_error`, `related_tool_click`, `search`, `signup_cta`, and `upgrade_cta` without coupling product components to a vendor.
+
+## Dependency and license policy
+
+Prefer MIT, Apache-2.0, or BSD dependencies. Record every newly introduced package in `docs/DEPENDENCY_LICENSES.md` before installation. GPL, AGPL, SSPL, BSL, non-commercial, source-available, or ambiguous packages require explicit approval. Do not copy implementation code from competing products.
