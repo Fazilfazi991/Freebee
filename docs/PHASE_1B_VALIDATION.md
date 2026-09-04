@@ -43,6 +43,10 @@ Must never ship to the client: `VITE_GITHUB_ACCESS_TOKEN`, `VITE_GITLAB_ACCESS_T
 
 The starting audit reported 7 critical, 134 high, 120 moderate, and 35 low advisories. Phase 1B upgrades the aligned Remix packages to 2.17.2, jsPDF to 4.2.1, and Vitest to 3.2.6. These address four critical advisory entries. Critical transitive findings through `fast-xml-parser`, `shell-quote`, and `tar` remain explicit release blockers pending compatible parent upgrades and regression coverage; unsafe cross-major overrides were not used.
 
+The post-upgrade lockfile audit reports 3 critical, 113 high, 90 moderate, and 26 low advisories across 1,883 dependencies (232 total). Counts changed both because of the targeted upgrades and because the concurrently added PDF/image tooling changed the dependency graph.
+
+Direct `@webcontainer/api` imports numbered 10 before Phase 1B and still number 10 in total: `ActionRunner` stopped importing it while the new adapter necessarily imports it. The important coupling measure is ordinary generated-action code, where direct imports fell from one to zero. Remaining imports are the adapter plus nine bootstrap/auth/connect, store, Git, search, and shell migration-inventory sites.
+
 ## Exit decision
 
 Phase 1B creates viable seams but does not authorize Phase 1C. The next phase should begin only after hosted Linux CI passes, remaining critical advisories are resolved or formally accepted, the server secret store is replaced with authenticated durable custody, and remaining direct WebContainer consumers have an agreed migration sequence.
