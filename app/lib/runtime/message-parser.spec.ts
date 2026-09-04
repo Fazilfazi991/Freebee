@@ -13,6 +13,26 @@ interface ExpectedResult {
 }
 
 describe('StreamingMessageParser', () => {
+  it('preserves the file and shell action representation used by the execution layer', () => {
+    const actions: Parameters<ActionCallback>[0][] = [];
+    const parser = new StreamingMessageParser({
+      artifactElement: () => '',
+      callbacks: { onActionClose: (action) => actions.push(action) },
+    });
+    const message =
+      '<boltArtifact id="contract" title="Contract">' +
+      '<boltAction type="file" filePath="src/app.ts">export default 1;</boltAction>' +
+      '<boltAction type="shell">pnpm run dev</boltAction>' +
+      '</boltArtifact>';
+
+    parser.parse('contract-message', message);
+
+    expect(actions.map(({ action }) => action)).toEqual([
+      { type: 'file', filePath: 'src/app.ts', content: 'export default 1;\n' },
+      { type: 'shell', content: 'pnpm run dev' },
+    ]);
+  });
+
   it('should pass through normal text', () => {
     const parser = new StreamingMessageParser();
     expect(parser.parse('test_id', 'Hello, world!')).toBe('Hello, world!');
