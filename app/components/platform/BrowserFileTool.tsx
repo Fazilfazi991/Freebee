@@ -2,7 +2,7 @@ import { ArrowDown, ArrowUp, Download, FileUp, RotateCcw, RotateCw, Trash2 } fro
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { track } from '~/lib/analytics';
 import { downloadBlob } from '~/lib/tools/download';
-import { extensionForFormat, transformImage, type ImageFormat } from '~/lib/tools/image/engine';
+import { extensionForFormat, transformImage, zipImages, type ImageFormat } from '~/lib/tools/image/engine';
 import { validateFiles } from '~/lib/tools/limits';
 import {
   extractPdfPages,
@@ -16,6 +16,7 @@ import {
   type PdfImageOptions,
 } from '~/lib/tools/pdf/engine';
 import { parsePageRanges } from '~/lib/tools/pdf/ranges';
+import { renderPdfPages, type RenderedPdfPage } from '~/lib/tools/pdf/render';
 import type { ToolPhase } from '~/lib/tools/state';
 import type { ToolDefinition } from '~/lib/tools/types';
 
@@ -33,6 +34,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
   const [phase, setPhase] = useState<ToolPhase>('idle');
   const [error, setError] = useState('');
   const [result, setResult] = useState<Blob | null>(null);
+  const [batchResults, setBatchResults] = useState<{ name: string; blob: Blob }[]>([]);
   const [imageResult, setImageResult] = useState<{
     width: number;
     height: number;
@@ -43,6 +45,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
   const [quality, setQuality] = useState(0.82);
   const [width, setWidth] = useState('');
   const [height, setHeight] = useState('');
+  const [scalePercent, setScalePercent] = useState<number | undefined>();
   const [lock, setLock] = useState(true);
   const [background, setBackground] = useState('#ffffff');
   const [pageSize, setPageSize] = useState<PdfImageOptions['pageSize']>('fit');
@@ -52,16 +55,21 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
   const [range, setRange] = useState('1');
   const [splitMode, setSplitMode] = useState<'extract' | 'every'>('extract');
   const [pages, setPages] = useState<PageOperation[]>([]);
+  const [thumbnails, setThumbnails] = useState<RenderedPdfPage[]>([]);
   const previews = useMemo(
     () => files.map((file) => (file.type.startsWith('image/') ? URL.createObjectURL(file) : '')),
     [files],
   );
   useEffect(() => () => previews.forEach((url) => url && URL.revokeObjectURL(url)), [previews]);
+  useEffect(() => () => thumbnails.forEach((page) => URL.revokeObjectURL(page.url)), [thumbnails]);
 
   const choose = async (selected: File[]) => {
     setError('');
     setResult(null);
     setImageResult(null);
+    setBatchResults([]);
+    thumbnails.forEach((page) => URL.revokeObjectURL(page.url));
+    setThumbnails([]);
 
     const limitError = validateFiles(selected);
 
@@ -104,6 +112,16 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
         const count = await getPdfPageCount(accepted[0]);
         setPageCount(count);
         setPages(Array.from({ length: count }, (_, sourceIndex) => ({ sourceIndex, rotation: 0 })));
+
+        if (tool.slug === 'organize-pdf') {
+          setThumbnails(
+            await renderPdfPages(
+              accepted[0],
+              Array.from({ length: count }, (_, index) => index),
+              { format: 'image/jpeg', scale: 0.25, quality: 0.72 },
+            ),
+          );
+        }
       } catch {
         setError('This PDF could not be read. It may be encrypted or damaged.');
         setPhase('error');
@@ -126,9 +144,12 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
     setFiles([]);
     setResult(null);
     setImageResult(null);
+    setBatchResults([]);
     setError('');
     setPageCount(0);
     setPages([]);
+    thumbnails.forEach((page) => URL.revokeObjectURL(page.url));
+    setThumbnails([]);
     setPhase('idle');
   };
   const process = async () => {
@@ -154,6 +175,26 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
         }
       } else if (tool.slug === 'organize-pdf') {
         setResult(await organizePdf(files[0], pages));
+      } else if (formats[tool.slug]) {
+        const target = formats[tool.slug];
+        const extension = extensionForFormat(target);
+        const outputs = await Promise.all(
+          files.map(async (file) => {
+            const transformed = await transformImage(file, {
+              format: target,
+              quality,
+              width: Number(width) || undefined,
+              height: Number(height) || undefined,
+              scalePercent,
+              lockAspect: lock,
+              background,
+            });
+
+            return { name: `${file.name.replace(/\.[^.]+$/, '')}.${extension}`, blob: transformed.blob };
+          }),
+        );
+        setBatchResults(outputs);
+        setResult(outputs[0].blob);
       } else {
         const target =
           formats[tool.slug] ||
@@ -163,6 +204,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
           quality,
           width: Number(width) || undefined,
           height: Number(height) || undefined,
+          scalePercent,
           lockAspect: lock,
           background,
         });
@@ -193,6 +235,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
   const isPdfList = tool.slug === 'merge-pdf';
   const isImagePdf = tool.slug === 'jpg-to-pdf';
   const isImage = tool.category === 'image';
+  const isBatchImage = Boolean(formats[tool.slug]);
 
   return (
     <div className="tp-engine">
@@ -201,7 +244,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
         ref={input}
         type="file"
         accept={tool.accept}
-        multiple={isPdfList || isImagePdf}
+        multiple={isPdfList || isImagePdf || isBatchImage}
         onChange={(event) => choose(Array.from(event.target.files || []))}
       />
       {!files.length ? (
@@ -234,7 +277,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
               Reset
             </button>
           </div>
-          <div className={isImagePdf ? 'tp-preview-grid' : 'tp-file-list'}>
+          <div className={isImagePdf || isBatchImage ? 'tp-preview-grid' : 'tp-file-list'}>
             {files.map((file, index) => (
               <div key={`${file.name}-${index}`} className="tp-file-row">
                 {previews[index] && <img src={previews[index]} alt="" />}
@@ -304,12 +347,48 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
                   onChange={(e) => setQuality(Number(e.target.value))}
                 />
               </label>
+              {tool.slug === 'resize-image' && (
+                <label>
+                  Common preset
+                  <select
+                    defaultValue=""
+                    onChange={(event) => {
+                      if (event.target.value.startsWith('percent:')) {
+                        setScalePercent(Number(event.target.value.slice(8)));
+                        setWidth('');
+                        setHeight('');
+
+                        return;
+                      }
+
+                      const [nextWidth, nextHeight] = event.target.value.split('x');
+                      setScalePercent(undefined);
+                      setWidth(nextWidth || '');
+                      setHeight(nextHeight || '');
+                    }}
+                  >
+                    <option value="">Custom dimensions</option>
+                    <option value="percent:25">25% of original</option>
+                    <option value="percent:50">50% of original</option>
+                    <option value="percent:75">75% of original</option>
+                    <option value="percent:200">200% of original</option>
+                    <option value="1080x1080">Square · 1080 × 1080</option>
+                    <option value="1080x1350">Portrait · 1080 × 1350</option>
+                    <option value="1080x1920">Story · 1080 × 1920</option>
+                    <option value="1920x1080">Full HD · 1920 × 1080</option>
+                    <option value="1280x720">HD · 1280 × 720</option>
+                  </select>
+                </label>
+              )}
               <label>
                 Width
                 <input
                   inputMode="numeric"
                   value={width}
-                  onChange={(e) => setWidth(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => {
+                    setScalePercent(undefined);
+                    setWidth(e.target.value.replace(/\D/g, ''));
+                  }}
                   placeholder="Original"
                 />
               </label>
@@ -318,7 +397,10 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
                 <input
                   inputMode="numeric"
                   value={height}
-                  onChange={(e) => setHeight(e.target.value.replace(/\D/g, ''))}
+                  onChange={(e) => {
+                    setScalePercent(undefined);
+                    setHeight(e.target.value.replace(/\D/g, ''));
+                  }}
                   placeholder="Original"
                 />
               </label>
@@ -355,6 +437,9 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
             <div className="tp-page-list">
               {pages.map((page, index) => (
                 <div key={page.sourceIndex}>
+                  {thumbnails[page.sourceIndex] && (
+                    <img src={thumbnails[page.sourceIndex].url} alt={`Page ${page.sourceIndex + 1}`} />
+                  )}
                   <strong>Page {page.sourceIndex + 1}</strong>
                   <span>{page.rotation}°</span>
                   <button onClick={() => setPages(move(pages, index, -1))} disabled={index === 0}>
@@ -409,7 +494,28 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
                 Download {formatSize(result.size)}
               </button>
             )}
+            {batchResults.length > 1 && (
+              <button
+                className="tp-download"
+                onClick={async () => downloadBlob(await zipImages(batchResults), `${tool.slug}-images.zip`)}
+              >
+                <Download size={18} />
+                Download all as ZIP
+              </button>
+            )}
           </div>
+          {batchResults.length > 1 && (
+            <div className="tp-file-list">
+              {batchResults.map((item) => (
+                <div className="tp-file-row" key={item.name}>
+                  <strong>{item.name}</strong>
+                  <button onClick={() => downloadBlob(item.blob, item.name)}>
+                    <Download size={16} /> Download
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           {result && imageResult && isImage && (
             <div className="tp-result-stats" aria-live="polite">
               <span>

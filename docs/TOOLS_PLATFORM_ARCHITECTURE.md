@@ -23,7 +23,7 @@ The dynamic route means a tool becomes routable when it is added to the registry
 - `CategoryPage` filters and displays any category supplied from the registry.
 - `ToolShell` owns breadcrumbs, identity, workspace, privacy disclosure, engine status, supporting copy, related tools, and FAQ.
 - `ToolCard`, `ToolIcon`, and `GlobalToolSearch` render registry data consistently.
-- `JsonFormatter` and `QrGenerator` are browser-side engines.
+- `JsonFormatter`, `QrGenerator`, `AdvancedPdfTool`, and `OcrTool` are focused browser-side engines.
 - `AdSlot` is disabled by default and renders nothing until explicitly enabled.
 
 ## Tool registry
@@ -48,9 +48,11 @@ Heavy PDF, image, video, OCR, and AI engines should be dynamically imported from
 
 Browser workspaces use shared `idle`, `files-selected`, `ready`, `processing`, `success`, and `error` phases. `BrowserFileTool` owns file selection and user-facing state; pure modules under `app/lib/tools/pdf` and `app/lib/tools/image` own transformations. The PDF layer imports `pdf-lib` dynamically inside operations, keeping it out of homepage and category entry bundles. The image layer uses `createImageBitmap`, canvas, and `toBlob` without an additional dependency.
 
-PDF operations support ordered image-to-PDF creation, ordered PDF merging, range extraction, per-page splitting, and accessible list-based page organization with reorder, rotate, and delete. Thumbnail rendering is intentionally deferred because no PDF renderer is installed and adding PDF.js solely for previews would materially increase the client payload.
+PDF operations support ordered image-to-PDF creation, merging, range extraction, per-page splitting, reorder, rotation, removal, page numbering, and PDF-to-image export. PDF.js and its worker load lazily only when previews or rendered pages are requested. Multi-page exports use lazy-loaded JSZip, and temporary canvases, documents, and Blob URLs are released after use.
 
-Image operations share MIME/extension mapping, aspect-ratio calculations, resizing, quality encoding, background flattening for JPEG, and canvas lifecycle cleanup. PNG quality controls are presented as re-encoding controls without promising size reduction.
+Image operations share MIME/extension mapping, aspect-ratio and percentage calculations, named resize presets, resizing, quality encoding, background flattening for JPEG, batch conversion with ZIP export, and canvas lifecycle cleanup. PNG quality controls are presented as re-encoding controls without promising size reduction.
+
+OCR is isolated behind `OcrTool`. Tesseract.js, its worker, WebAssembly runtime, and selected language model load only after the user starts recognition. The worker is explicitly terminated after success or failure. Input images and extracted text stay in the browser.
 
 ## File limits and downloads
 

@@ -16,6 +16,13 @@ describe('tool registry', () => {
       'png-to-jpg',
       'jpg-to-webp',
       'webp-to-jpg',
+      'pdf-to-jpg',
+      'pdf-to-png',
+      'rotate-pdf',
+      'remove-pdf-pages',
+      'extract-pdf-pages',
+      'add-page-numbers-to-pdf',
+      'image-to-text',
     ];
     expected.forEach((slug) => expect(tools.find((tool) => tool.slug === slug)?.engine).toBe('browser'));
   });

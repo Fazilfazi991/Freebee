@@ -990,11 +990,53 @@ body {
   background: var(--tp-soft);
   border-radius: 10px;
 }
+
+.tp-page-list img {
+  width: 72px;
+  height: 96px;
+  object-fit: contain;
+  border: 1px solid var(--tp-line);
+  background: var(--tp-white);
+}
 .tp-page-list strong {
   flex: 1;
 }
 .tp-page-list span {
   color: var(--tp-muted);
+}
+
+.tp-pdf-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.tp-pdf-image-grid article {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid var(--tp-line);
+  border-radius: 0.9rem;
+}
+
+.tp-pdf-image-grid img {
+  width: 100%;
+  height: 180px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.tp-ocr-output {
+  width: 100%;
+  min-height: 15rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  resize: vertical;
+  border: 1px solid var(--tp-line);
+  border-radius: 0.75rem;
+  background: var(--tp-white);
+  color: inherit;
 }
 @media (max-width: 900px) {
   .tp-nav {

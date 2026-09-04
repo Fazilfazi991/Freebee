@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Copy, Download, Minimize2, Wand2 } from 'lucide-react';
+import { Copy, Download, Minimize2, RotateCcw, Wand2 } from 'lucide-react';
 import { track } from '~/lib/analytics';
 
 const sample = '{\n  "project": "Tool Platform",\n  "ready": true\n}';
@@ -56,6 +56,15 @@ export function JsonFormatter() {
         <button onClick={download}>
           <Download size={18} />
           Download
+        </button>
+        <button
+          onClick={() => {
+            setValue(sample);
+            setError('');
+          }}
+        >
+          <RotateCcw size={18} />
+          Reset
         </button>
       </div>
       {error && (

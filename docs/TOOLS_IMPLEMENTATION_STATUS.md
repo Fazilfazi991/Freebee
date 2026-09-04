@@ -1,19 +1,32 @@
-# Tools implementation status
+# Tools implementation and verification status
 
-| Tool | Route | Engine | Processing | Status | Dependency | License | Next enhancement |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| JSON Formatter | `/json-formatter` | JSON parser | Browser | Ready | Native | — | Tree view |
-| QR Generator | `/qr-generator` | Canvas QR | Browser | Ready | react-qrcode-logo | MIT | Error-correction controls |
-| JPG to PDF | `/jpg-to-pdf` | PDF composition | Browser | Ready | pdf-lib 1.17.1 | MIT | Drag handles |
-| Merge PDF | `/merge-pdf` | Page copy | Browser | Ready | pdf-lib 1.17.1 | MIT | Per-file page counts |
-| Split PDF | `/split-pdf` | Page extraction | Browser | Ready | pdf-lib 1.17.1 + JSZip 3.10.1 | MIT | Custom output naming |
-| Organize PDF | `/organize-pdf` | Page copy/rotation | Browser | Ready | pdf-lib 1.17.1 | MIT | Lazy PDF.js thumbnails |
-| Compress Image | `/compress-image` | Canvas encoding | Browser | Ready | Native | — | Side-by-side preview |
-| Resize Image | `/resize-image` | Canvas resize | Browser | Ready | Native | — | Named size presets |
-| JPG to PNG | `/jpg-to-png` | Canvas conversion | Browser | Ready | Native | — | Batch conversion |
-| PNG to JPG | `/png-to-jpg` | Canvas conversion | Browser | Ready | Native | — | Eyedropper background |
-| JPG to WebP | `/jpg-to-webp` | Canvas conversion | Browser | Ready | Native | — | Batch conversion |
-| WebP to JPG | `/webp-to-jpg` | Canvas conversion | Browser | Ready | Native | — | Batch conversion |
-| Compress PDF | `/compress-pdf` | Not connected | — | Planned | — | — | Evaluate a real optimization engine |
-| Image to Text | `/image-to-text` | Not connected | — | Planned | — | — | Evaluate local OCR |
-| MP4 to MP3 | `/mp4-to-mp3` | Not connected | — | Planned | — | — | Evaluate lazy WASM codec |
+Deterministic fixtures live in `test-fixtures/tools`. “Automated” records engine/unit validation; browser interaction results are recorded only after a real download and reset flow completes.
+
+| Tool | Route | Route load | Input works | Processing works | Output valid | Download works | Reset works | Console clean | Mobile checked | Status |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| QR Generator | `/qr-generator` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified |
+| JSON Formatter | `/json-formatter` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified |
+| JPG to PDF | `/jpg-to-pdf` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified |
+| Merge PDF | `/merge-pdf` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified |
+| Split PDF | `/split-pdf` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified |
+| Organize PDF | `/organize-pdf` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified; PDF.js thumbnails added |
+| Compress Image | `/compress-image` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified |
+| Resize Image | `/resize-image` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified; presets added |
+| JPG to PNG | `/jpg-to-png` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified; batch/ZIP added |
+| PNG to JPG | `/png-to-jpg` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified; batch/ZIP added |
+| JPG to WebP | `/jpg-to-webp` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified; batch/ZIP added |
+| WebP to JPG | `/webp-to-jpg` | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Pass | Verified; batch/ZIP added |
+
+## Newly implemented routes
+
+| Tool | Route | Engine | Processing | Status |
+| --- | --- | --- | --- | --- |
+| PDF to JPG | `/pdf-to-jpg` | PDF.js rendering + Canvas | Browser | Verified: 3-page fixture rendered as three previews with individual and ZIP download actions |
+| PDF to PNG | `/pdf-to-png` | PDF.js rendering + Canvas | Browser | Verified: 3-page fixture rendered with individual and ZIP download actions |
+| Rotate PDF | `/rotate-pdf` | pdf-lib | Browser | Verified |
+| Remove PDF Pages | `/remove-pdf-pages` | pdf-lib | Browser | Verified |
+| Extract PDF Pages | `/extract-pdf-pages` | Shared page-range/extraction engine | Browser | Verified |
+| Add Page Numbers to PDF | `/add-page-numbers-to-pdf` | pdf-lib text drawing | Browser | Verified with downloadable output |
+| Image to Text | `/image-to-text` | Tesseract.js worker/WASM | Browser | Verified with local PNG OCR and text output |
+
+Incomplete tools remain explicitly marked as planned in the registry and are not sitemap-eligible: Compress PDF, MP4 to MP3, Remove Background, AI Image Generator, and UUID Generator.

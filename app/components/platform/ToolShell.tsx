@@ -8,6 +8,8 @@ import { ToolCard } from './ToolCard';
 import { JsonFormatter } from './JsonFormatter';
 import { QrGenerator } from './QrGenerator';
 import { BrowserFileTool } from './BrowserFileTool';
+import { AdvancedPdfTool } from './AdvancedPdfTool';
+import { OcrTool } from './OcrTool';
 
 export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -23,6 +25,15 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const related = tools.filter((item) => item.category === tool.category && item.id !== tool.id).slice(0, 3);
   const isJson = tool.slug === 'json-formatter';
   const isQr = tool.slug === 'qr-generator';
+  const isOcr = tool.slug === 'image-to-text';
+  const isAdvancedPdf = [
+    'pdf-to-jpg',
+    'pdf-to-png',
+    'rotate-pdf',
+    'remove-pdf-pages',
+    'extract-pdf-pages',
+    'add-page-numbers-to-pdf',
+  ].includes(tool.slug);
   const hasBrowserFileEngine = tool.engine === 'browser' && !isJson && !isQr;
 
   return (
@@ -48,6 +59,10 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
           <JsonFormatter />
         ) : isQr ? (
           <QrGenerator />
+        ) : isOcr ? (
+          <OcrTool />
+        ) : isAdvancedPdf ? (
+          <AdvancedPdfTool tool={tool} />
         ) : hasBrowserFileEngine ? (
           <BrowserFileTool tool={tool} />
         ) : (

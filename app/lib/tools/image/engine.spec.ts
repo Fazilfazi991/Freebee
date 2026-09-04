@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extensionForFormat, fitDimensions } from './engine';
+import { extensionForFormat, fitDimensions, scaleDimensions } from './engine';
 describe('image engine calculations', () => {
   it('maps MIME formats to extensions', () => {
     expect(extensionForFormat('image/jpeg')).toBe('jpg');
@@ -12,4 +12,8 @@ describe('image engine calculations', () => {
   });
   it('allows unlocked dimensions', () =>
     expect(fitDimensions(100, 50, 80, 80, false)).toEqual({ width: 80, height: 80 }));
+  it('scales both dimensions by percentage with a one-pixel floor', () => {
+    expect(scaleDimensions(1600, 900, 50)).toEqual({ width: 800, height: 450 });
+    expect(scaleDimensions(1, 1, 25)).toEqual({ width: 1, height: 1 });
+  });
 });

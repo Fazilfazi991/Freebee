@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { QRCode } from 'react-qrcode-logo';
-import { Download } from 'lucide-react';
+import { Download, RotateCcw } from 'lucide-react';
 import { track } from '~/lib/analytics';
 
 export function QrGenerator() {
@@ -33,6 +33,10 @@ export function QrGenerator() {
         <button className="tp-primary" onClick={download} disabled={!value}>
           <Download size={18} />
           Download PNG
+        </button>
+        <button onClick={() => setValue('https://example.com')}>
+          <RotateCcw size={18} />
+          Reset
         </button>
       </div>
       <div className="tp-qr-preview" ref={ref}>

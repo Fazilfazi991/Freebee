@@ -99,3 +99,51 @@ export async function organizePdf(file: File, operations: PageOperation[]) {
 
   return new Blob([await output.save()], { type: 'application/pdf' });
 }
+
+export async function rotatePdfPages(file: File, pageIndices: number[], rotation: 90 | 180 | 270) {
+  const { PDFDocument: pdfDocument, degrees } = await loadPdfLib();
+  const document = await pdfDocument.load(await file.arrayBuffer());
+  const selected = new Set(pageIndices);
+  document.getPages().forEach((page, index) => {
+    if (selected.has(index)) {
+      page.setRotation(degrees((page.getRotation().angle + rotation) % 360));
+    }
+  });
+
+  return new Blob([await document.save()], { type: 'application/pdf' });
+}
+
+export async function removePdfPages(file: File, pageIndices: number[]) {
+  const { PDFDocument: pdfDocument } = await loadPdfLib();
+  const document = await pdfDocument.load(await file.arrayBuffer());
+  [...pageIndices].sort((a, b) => b - a).forEach((index) => document.removePage(index));
+
+  if (!document.getPageCount()) {
+    throw new Error('Keep at least one page in the PDF.');
+  }
+
+  return new Blob([await document.save()], { type: 'application/pdf' });
+}
+
+export async function addPdfPageNumbers(
+  file: File,
+  options: { position: 'left' | 'center' | 'right'; start: number; prefix: string },
+) {
+  const { PDFDocument: pdfDocument, StandardFonts: standardFonts, rgb } = await loadPdfLib();
+  const document = await pdfDocument.load(await file.arrayBuffer());
+  const font = await document.embedFont(standardFonts.Helvetica);
+  document.getPages().forEach((page, index) => {
+    const text = `${options.prefix}${options.start + index}`;
+    const size = 11;
+    const width = font.widthOfTextAtSize(text, size);
+    const x =
+      options.position === 'left'
+        ? 24
+        : options.position === 'right'
+          ? page.getWidth() - width - 24
+          : (page.getWidth() - width) / 2;
+    page.drawText(text, { x, y: 18, size, font, color: rgb(0.2, 0.2, 0.2) });
+  });
+
+  return new Blob([await document.save()], { type: 'application/pdf' });
+}

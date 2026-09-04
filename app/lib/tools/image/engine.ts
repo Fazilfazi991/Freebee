@@ -1,6 +1,10 @@
 export type ImageFormat = 'image/jpeg' | 'image/png' | 'image/webp';
 export const extensionForFormat = (format: ImageFormat) =>
   ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[format];
+export const scaleDimensions = (width: number, height: number, percent: number) => ({
+  width: Math.max(1, Math.round(width * (percent / 100))),
+  height: Math.max(1, Math.round(height * (percent / 100))),
+});
 export function fitDimensions(width: number, height: number, targetWidth?: number, targetHeight?: number, lock = true) {
   if (!targetWidth && !targetHeight) {
     return { width, height };
@@ -29,6 +33,7 @@ export async function transformImage(
     quality: number;
     width?: number;
     height?: number;
+    scalePercent?: number;
     lockAspect?: boolean;
     background?: string;
   },
@@ -36,7 +41,9 @@ export async function transformImage(
   const image = await loadImage(file);
   const originalWidth = image.width;
   const originalHeight = image.height;
-  const dimensions = fitDimensions(image.width, image.height, options.width, options.height, options.lockAspect);
+  const dimensions = options.scalePercent
+    ? scaleDimensions(image.width, image.height, options.scalePercent)
+    : fitDimensions(image.width, image.height, options.width, options.height, options.lockAspect);
 
   if (dimensions.width * dimensions.height > 40_000_000) {
     image.close();
@@ -70,4 +77,12 @@ export async function transformImage(
   }
 
   return { blob, width: dimensions.width, height: dimensions.height, originalWidth, originalHeight };
+}
+
+export async function zipImages(files: { name: string; blob: Blob }[]) {
+  const { default: jsZip } = await import('jszip');
+  const archive = new jsZip();
+  files.forEach((file) => archive.file(file.name, file.blob));
+
+  return archive.generateAsync({ type: 'blob', compression: 'DEFLATE' });
 }
