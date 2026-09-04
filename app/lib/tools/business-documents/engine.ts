@@ -55,97 +55,205 @@ export async function renderBusinessPdf(document: BusinessDocument) {
   const pdf = await pdfDocument.create();
   const font = await pdf.embedFont(standardFonts.Helvetica);
   const bold = await pdf.embedFont(standardFonts.HelveticaBold);
-  const accent =
-    document.template === 'modern'
-      ? rgb(0.12, 0.29, 0.55)
-      : document.template === 'minimal'
-        ? rgb(0.2, 0.2, 0.2)
-        : rgb(0.1, 0.45, 0.4);
+  const palette = {
+    classic: { accent: rgb(0.06, 0.4, 0.36), dark: rgb(0.09, 0.14, 0.2), soft: rgb(0.94, 0.97, 0.96) },
+    minimal: { accent: rgb(0.2, 0.25, 0.31), dark: rgb(0.12, 0.14, 0.17), soft: rgb(0.97, 0.97, 0.97) },
+    modern: { accent: rgb(0.18, 0.32, 0.62), dark: rgb(0.08, 0.13, 0.24), soft: rgb(0.93, 0.95, 0.99) },
+  }[document.template];
   const totals = calculateTotals(document.items);
-  let page = pdf.addPage([595, 842]);
+  const pageWidth = 595;
+  const pageHeight = 842;
+  const left = 42;
+  const right = 553;
+  const safe = (value = '') => value.replace(/[^ -~ -ÿ]/g, '-');
+  const wrap = (value: string, maxWidth: number, size: number, strong = false) => {
+    const target = strong ? bold : font;
+    const lines: string[] = [];
+
+    for (const paragraph of safe(value).split(/\r?\n/)) {
+      const words = paragraph.split(/\s+/).filter(Boolean);
+
+      if (!words.length) {
+        lines.push('');
+        continue;
+      }
+
+      let line = '';
+
+      for (const word of words) {
+        const candidate = line ? `${line} ${word}` : word;
+
+        if (target.widthOfTextAtSize(candidate, size) <= maxWidth || !line) {
+          line = candidate;
+        } else {
+          lines.push(line);
+          line = word;
+        }
+      }
+      lines.push(line);
+    }
+
+    return lines;
+  };
+  let page = pdf.addPage([pageWidth, pageHeight]);
   let y = 790;
-  const text = (value: string, x: number, size = 10, strong = false) => {
-    page.drawText(value.slice(0, 90), { x, y, size, font: strong ? bold : font, color: rgb(0.12, 0.14, 0.18) });
+  const drawText = (value: string, x: number, atY = y, size = 9, strong = false, color = palette.dark) =>
+    page.drawText(safe(value), { x, y: atY, size, font: strong ? bold : font, color });
+  const drawRight = (value: string, x: number, atY = y, size = 9, strong = false, color = palette.dark) => {
+    const chosen = strong ? bold : font;
+    drawText(value, x - chosen.widthOfTextAtSize(safe(value), size), atY, size, strong, color);
   };
-  const newPage = () => {
-    page = pdf.addPage([595, 842]);
+  const drawLines = (value: string, x: number, maxWidth: number, size = 9, strong = false, leading = 12) => {
+    const lines = wrap(value, maxWidth, size, strong);
+    lines.forEach((line, index) => drawText(line, x, y - index * leading, size, strong));
+    y -= Math.max(1, lines.length) * leading;
+  };
+  const drawPageMarker = () => {
+    if (document.template === 'modern') {
+      page.drawRectangle({ x: 0, y: 0, width: 14, height: pageHeight, color: palette.accent });
+    } else if (document.template === 'classic') {
+      page.drawRectangle({ x: 0, y: 824, width: pageWidth, height: 18, color: palette.accent });
+    }
+  };
+  const drawTableHeader = () => {
+    if (document.template !== 'minimal') {
+      page.drawRectangle({ x: left, y: y - 7, width: right - left, height: 24, color: palette.accent });
+    } else {
+      page.drawLine({
+        start: { x: left, y: y + 14 },
+        end: { x: right, y: y + 14 },
+        thickness: 1,
+        color: palette.accent,
+      });
+      page.drawLine({ start: { x: left, y: y - 7 }, end: { x: right, y: y - 7 }, thickness: 1, color: palette.accent });
+    }
+
+    const color = document.template === 'minimal' ? palette.dark : rgb(1, 1, 1);
+    drawText('ITEM / DESCRIPTION', left + 7, y, 7, true, color);
+    drawRight('QTY', 332, y, 7, true, color);
+    drawRight('RATE', 394, y, 7, true, color);
+    drawRight('TAX', 435, y, 7, true, color);
+    drawRight('DISC.', 481, y, 7, true, color);
+    drawRight('AMOUNT', right - 7, y, 7, true, color);
+    y -= 22;
+  };
+  const newPage = (withTable = false) => {
+    page = pdf.addPage([pageWidth, pageHeight]);
     y = 790;
+    drawPageMarker();
+
+    if (withTable) {
+      drawTableHeader();
+    }
   };
-  page.drawRectangle({ x: 0, y: 812, width: 595, height: 30, color: accent });
+  drawPageMarker();
 
   if (document.logo) {
     const bytes = await document.logo.arrayBuffer();
     const logo = document.logo.type === 'image/png' ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
-    const fitted = logo.scaleToFit(90, 50);
-    page.drawImage(logo, { x: 455, y: 750, width: fitted.width, height: fitted.height });
+    const fitted = logo.scaleToFit(105, 54);
+    page.drawImage(logo, { x: left, y: 742, width: fitted.width, height: fitted.height });
   }
 
-  text(document.type.toUpperCase(), 42, 22, true);
-  y -= 34;
-  text(document.business.name || 'Your business', 42, 14, true);
+  drawRight(document.type.toUpperCase(), right, 775, 25, true, palette.accent);
+  drawRight(`# ${document.number || 'DRAFT'}`, right, 754, 9, true);
+  y = 700;
+  drawText('FROM', left, y, 7, true, palette.accent);
+  drawText(document.type === 'invoice' ? 'BILL TO' : 'PREPARED FOR', 310, y, 7, true, palette.accent);
   y -= 18;
-  text(document.business.address, 42);
-  y -= 14;
-  text([document.business.email, document.business.phone].filter(Boolean).join(' • '), 42);
-  y -= 30;
-  text(`${document.type === 'invoice' ? 'Invoice' : 'Quotation'} #: ${document.number}`, 360, 10, true);
-  y -= 15;
-  text(`Issue: ${document.issueDate}`, 360);
-  y -= 15;
-  text(`${document.type === 'invoice' ? 'Due' : 'Valid until'}: ${document.dueDate}`, 360);
-  y -= 25;
-  text('Bill to', 42, 11, true);
-  y -= 16;
-  text([document.customer.name, document.customer.company].filter(Boolean).join(' — '), 42);
-  y -= 15;
-  text(document.customer.address, 42);
-  y -= 28;
-  text('Description', 42, 10, true);
-  text('Qty', 330, 10, true);
-  text('Rate', 375, 10, true);
-  text('Tax', 445, 10, true);
-  text('Total', 500, 10, true);
-  y -= 16;
+
+  const partyLines = (party: BusinessDocument['business'] | BusinessDocument['customer'], isBusiness = false) =>
+    [
+      party.name || (isBusiness ? 'Your business' : 'Client'),
+      'company' in party ? party.company : '',
+      party.address,
+      [party.email, party.phone].filter(Boolean).join(' | '),
+      isBusiness && 'taxId' in party && party.taxId ? `Tax / VAT: ${party.taxId}` : '',
+    ].filter(Boolean) as string[];
+  const from = partyLines(document.business, true);
+  const to = partyLines(document.customer);
+  const partyStart = y;
+  from.forEach((line, index) => drawText(line, left, partyStart - index * 14, index === 0 ? 11 : 8, index === 0));
+  to.forEach((line, index) => drawText(line, 310, partyStart - index * 14, index === 0 ? 11 : 8, index === 0));
+  y = partyStart - Math.max(from.length, to.length) * 14 - 20;
+  page.drawRectangle({ x: left, y: y - 7, width: right - left, height: 38, color: palette.soft });
+  drawText('ISSUE DATE', left + 12, y + 14, 6, true, palette.accent);
+  drawText(document.issueDate || '-', left + 12, y, 9, true);
+
+  const dateLabel = document.type === 'invoice' ? 'DUE DATE' : 'VALID UNTIL';
+  drawText(dateLabel, 310, y + 14, 6, true, palette.accent);
+  drawText(document.dueDate || '-', 310, y, 9, true);
+  y -= 45;
+  drawTableHeader();
 
   for (const item of document.items) {
-    if (y < 110) {
-      newPage();
+    const line = lineTotal(item);
+    const description = wrap(item.description || 'Item', 245, 8.5);
+    const rowHeight = Math.max(25, description.length * 11 + 10);
+
+    if (y - rowHeight < 78) {
+      newPage(true);
     }
 
-    const line = lineTotal(item);
-    text(item.description || 'Item', 42);
-    text(String(item.quantity), 330);
-    text(formatCurrency(item.rate, document.currency), 375);
-    text(`${item.tax}%`, 445);
-    text(formatCurrency(line.total, document.currency), 500);
-    y -= 18;
+    description.forEach((part, index) => drawText(part, left + 7, y - index * 11, 8.5));
+    drawRight(String(item.quantity), 332, y, 8);
+    drawRight(formatCurrency(item.rate, document.currency), 394, y, 8);
+    drawRight(`${item.tax}%`, 435, y, 8);
+    drawRight(`${item.discount}%`, 481, y, 8);
+    drawRight(formatCurrency(line.total, document.currency), right - 7, y, 8, true);
+    page.drawLine({
+      start: { x: left, y: y - rowHeight + 8 },
+      end: { x: right, y: y - rowHeight + 8 },
+      thickness: 0.5,
+      color: rgb(0.86, 0.88, 0.9),
+    });
+    y -= rowHeight;
   }
 
-  if (y < 150) {
+  const notesLines = wrap(document.notes, 265, 8);
+  const termsLines = wrap(document.terms, 265, 8);
+  const closingHeight = 118 + Math.max(0, notesLines.length - 1) * 11 + Math.max(0, termsLines.length - 1) * 11;
+
+  if (y - closingHeight < 55) {
     newPage();
   }
 
-  y -= 14;
+  y -= 12;
 
-  for (const [label, value] of [
+  const totalsX = 365;
+
+  for (const [name, value] of [
     ['Subtotal', totals.subtotal],
     ['Discount', -totals.discount],
     ['Tax', totals.tax],
-    ['Grand total', totals.total],
+    ['Total', totals.total],
   ] as const) {
-    text(label, 375, label === 'Grand total' ? 12 : 10, label === 'Grand total');
-    text(formatCurrency(value, document.currency), 470, label === 'Grand total' ? 12 : 10, label === 'Grand total');
-    y -= 18;
+    if (name === 'Total') {
+      page.drawRectangle({ x: totalsX - 10, y: y - 8, width: right - totalsX + 10, height: 27, color: palette.accent });
+    }
+
+    const color = name === 'Total' ? rgb(1, 1, 1) : palette.dark;
+    drawText(name, totalsX, y, name === 'Total' ? 10 : 8.5, name === 'Total', color);
+    drawRight(formatCurrency(value, document.currency), right - 8, y, name === 'Total' ? 10 : 8.5, true, color);
+    y -= name === 'Total' ? 31 : 19;
   }
-  y -= 14;
-  text('Notes', 42, 10, true);
-  y -= 15;
-  text(document.notes, 42);
-  y -= 24;
-  text('Terms', 42, 10, true);
-  y -= 15;
-  text(document.terms, 42);
-  pdf.setTitle(`${document.type} ${document.number}`);
+  y -= 8;
+
+  if (document.notes) {
+    drawText('NOTES', left, y, 7, true, palette.accent);
+    y -= 14;
+    drawLines(document.notes, left, 265, 8, false, 11);
+    y -= 10;
+  }
+
+  if (document.terms) {
+    drawText('TERMS', left, y, 7, true, palette.accent);
+    y -= 14;
+    drawLines(document.terms, left, 265, 8, false, 11);
+  }
+
+  pdf.setTitle(`${document.type === 'invoice' ? 'Invoice' : 'Quotation'} ${document.number}`);
+  pdf.setSubject(`${document.template} ${document.type}`);
 
   return new Blob([await pdf.save()], { type: 'application/pdf' });
 }

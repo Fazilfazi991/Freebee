@@ -1,17 +1,24 @@
-import { ArrowDown, ArrowUp, Download, Plus, RotateCcw, Trash2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowDown, ArrowUp, Download, ImagePlus, Plus, RotateCcw, Trash2, X } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
 import { downloadBlob } from '~/lib/tools/download';
 import { browserToolLimits } from '~/lib/tools/limits';
 import {
   calculateTotals,
   documentFilename,
   formatCurrency,
+  lineTotal,
   renderBusinessPdf,
   type BusinessDocument,
   type Currency,
   type LineItem,
 } from '~/lib/tools/business-documents/engine';
 
+const currencies: Currency[] = ['AED', 'USD', 'EUR', 'GBP', 'INR', 'SAR', 'QAR', 'OMR', 'KWD', 'BHD'];
+const templates: Array<{ value: BusinessDocument['template']; label: string; description: string }> = [
+  { value: 'classic', label: 'Classic', description: 'Structured and timeless' },
+  { value: 'minimal', label: 'Minimal', description: 'Clean and understated' },
+  { value: 'modern', label: 'Modern', description: 'Bold with an accent' },
+];
 const today = () => new Date().toISOString().slice(0, 10);
 const addDays = (days: number) => new Date(Date.now() + days * 864e5).toISOString().slice(0, 10);
 const makeItem = (): LineItem => ({
@@ -22,7 +29,7 @@ const makeItem = (): LineItem => ({
   tax: 0,
   discount: 0,
 });
-const initial = (type: 'invoice' | 'quotation'): BusinessDocument => ({
+const initial = (type: BusinessDocument['type']): BusinessDocument => ({
   type,
   number: type === 'invoice' ? 'INV-1001' : 'QT-1001',
   issueDate: today(),
@@ -36,32 +43,206 @@ const initial = (type: 'invoice' | 'quotation'): BusinessDocument => ({
   terms: '',
 });
 
-export function BusinessDocumentTool({ type }: { type: 'invoice' | 'quotation' }) {
-  const [doc, setDoc] = useState(() => initial(type));
+type Party = BusinessDocument['business'] | BusinessDocument['customer'];
+
+function PartyBlock({
+  title,
+  party,
+  business,
+  onChange,
+}: {
+  title: string;
+  party: Party;
+  business?: boolean;
+  onChange: (key: string, value: string) => void;
+}) {
+  return (
+    <section className="tp-party-block" aria-label={title}>
+      <p className="tp-document-kicker">{title}</p>
+      <input
+        className="tp-party-name"
+        aria-label={`${title} name`}
+        placeholder={business ? 'Your business name' : 'Client name'}
+        value={party.name}
+        onChange={(e) => onChange('name', e.target.value)}
+      />
+      {'company' in party && (
+        <input
+          aria-label="Client company"
+          placeholder="Company (optional)"
+          value={party.company}
+          onChange={(e) => onChange('company', e.target.value)}
+        />
+      )}
+      <textarea
+        aria-label={`${title} address`}
+        placeholder="Street address, city, country"
+        value={party.address}
+        onChange={(e) => onChange('address', e.target.value)}
+      />
+      <div className="tp-party-contact">
+        <input
+          type="email"
+          aria-label={`${title} email`}
+          placeholder="email@example.com"
+          value={party.email}
+          onChange={(e) => onChange('email', e.target.value)}
+        />
+        <input
+          type="tel"
+          aria-label={`${title} phone`}
+          placeholder="Phone number"
+          value={party.phone}
+          onChange={(e) => onChange('phone', e.target.value)}
+        />
+      </div>
+      {business && 'taxId' in party && (
+        <input
+          aria-label="Tax or VAT number"
+          placeholder="Tax / VAT number (optional)"
+          value={party.taxId}
+          onChange={(e) => onChange('taxId', e.target.value)}
+        />
+      )}
+    </section>
+  );
+}
+
+function TotalsSummary({ document }: { document: BusinessDocument }) {
+  const totals = useMemo(() => calculateTotals(document.items), [document.items]);
+  return (
+    <section className="tp-document-totals" aria-label="Document totals">
+      <div>
+        <span>Subtotal</span>
+        <output>{formatCurrency(totals.subtotal, document.currency)}</output>
+      </div>
+      <div>
+        <span>Discount</span>
+        <output>−{formatCurrency(totals.discount, document.currency)}</output>
+      </div>
+      <div>
+        <span>Tax</span>
+        <output>{formatCurrency(totals.tax, document.currency)}</output>
+      </div>
+      <div className="tp-grand-total">
+        <span>Total</span>
+        <output>{formatCurrency(totals.total, document.currency)}</output>
+      </div>
+    </section>
+  );
+}
+
+function DocumentSettings({
+  document,
+  busy,
+  onChange,
+  onDownload,
+  onReset,
+}: {
+  document: BusinessDocument;
+  busy: boolean;
+  onChange: (patch: Partial<BusinessDocument>) => void;
+  onDownload: () => void;
+  onReset: () => void;
+}) {
+  return (
+    <aside className="tp-document-settings" aria-label="Document settings">
+      <button className="tp-primary tp-download-document" disabled={busy} onClick={onDownload}>
+        <Download aria-hidden="true" />
+        {busy ? 'Preparing PDF…' : 'Download PDF'}
+      </button>
+      <section>
+        <h3>Template</h3>
+        <div className="tp-template-picker">
+          {templates.map((template) => (
+            <button
+              key={template.value}
+              type="button"
+              aria-pressed={document.template === template.value}
+              className={document.template === template.value ? 'is-selected' : ''}
+              onClick={() => onChange({ template: template.value })}
+            >
+              <span className={`tp-template-swatch tp-template-${template.value}`} aria-hidden="true" />
+              <strong>{template.label}</strong>
+              <small>{template.description}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+      <section>
+        <h3>Document settings</h3>
+        <label>
+          Currency
+          <select value={document.currency} onChange={(e) => onChange({ currency: e.target.value as Currency })}>
+            {currencies.map((currency) => (
+              <option key={currency}>{currency}</option>
+            ))}
+          </select>
+        </label>
+      </section>
+      <p className="tp-document-privacy">Your document and logo stay in this browser. Nothing is uploaded.</p>
+      <button className="tp-reset-document" onClick={onReset}>
+        <RotateCcw aria-hidden="true" /> Reset document
+      </button>
+    </aside>
+  );
+}
+
+export function BusinessDocumentTool({ type }: { type: BusinessDocument['type'] }) {
+  const [document, setDocument] = useState(() => initial(type));
   const [busy, setBusy] = useState(false);
   const [logoError, setLogoError] = useState('');
   const [logoPreview, setLogoPreview] = useState('');
-  const totals = useMemo(() => calculateTotals(doc.items), [doc.items]);
+  const logoInput = useRef<HTMLInputElement>(null);
+  const label = type === 'invoice' ? 'Invoice' : 'Quotation';
+  const patch = (value: Partial<BusinessDocument>) => setDocument((current) => ({ ...current, ...value }));
   const patchParty = (party: 'business' | 'customer', key: string, value: string) =>
-    setDoc({ ...doc, [party]: { ...doc[party], [key]: value } });
+    setDocument((current) => ({ ...current, [party]: { ...current[party], [key]: value } }));
   const updateItem = (id: string, key: keyof LineItem, value: string) =>
-    setDoc({
-      ...doc,
-      items: doc.items.map((item) =>
+    setDocument((current) => ({
+      ...current,
+      items: current.items.map((item) =>
         item.id === id ? { ...item, [key]: key === 'description' ? value : Number(value) } : item,
       ),
+    }));
+  const moveItem = (index: number, offset: number) =>
+    setDocument((current) => {
+      const items = [...current.items];
+      [items[index], items[index + offset]] = [items[index + offset], items[index]];
+
+      return { ...current, items };
     });
-  const move = (index: number, offset: number) => {
-    const items = [...doc.items];
-    [items[index], items[index + offset]] = [items[index + offset], items[index]];
-    setDoc({ ...doc, items });
+  const removeLogo = () => {
+    if (logoPreview) {
+      URL.revokeObjectURL(logoPreview);
+    }
+
+    setLogoPreview('');
+    setLogoError('');
+    patch({ logo: undefined });
+
+    if (logoInput.current) {
+      logoInput.current.value = '';
+    }
+  };
+  const reset = () => {
+    if (logoPreview) {
+      URL.revokeObjectURL(logoPreview);
+    }
+
+    setLogoPreview('');
+    setLogoError('');
+    setDocument(initial(type));
+
+    if (logoInput.current) {
+      logoInput.current.value = '';
+    }
   };
   const generate = async () => {
     setBusy(true);
 
     try {
-      const blob = await renderBusinessPdf(doc);
-      downloadBlob(blob, documentFilename(doc));
+      downloadBlob(await renderBusinessPdf(document), documentFilename(document));
     } finally {
       setBusy(false);
     }
@@ -69,210 +250,217 @@ export function BusinessDocumentTool({ type }: { type: 'invoice' | 'quotation' }
 
   return (
     <div className="tp-document-tool">
-      <p className="tp-preview-note">Your document data stays in your browser during this session.</p>
-      <div className="tp-document-grid">
-        <fieldset>
-          <legend>Business</legend>
-          {['name', 'address', 'email', 'phone', 'taxId'].map((key) => (
-            <label key={key}>
-              {key}
+      <div className="tp-document-workspace">
+        <main className={`tp-document-paper tp-document-paper-${document.template}`}>
+          <header className="tp-document-header">
+            <div className="tp-logo-card">
               <input
-                value={doc.business[key as keyof typeof doc.business]}
-                onChange={(e) => patchParty('business', key, e.target.value)}
+                ref={logoInput}
+                id={`${type}-logo`}
+                className="tp-visually-hidden"
+                type="file"
+                accept="image/png,image/jpeg"
+                onChange={async (e) => {
+                  const logo = e.target.files?.[0];
+
+                  if (!logo) {
+                    return;
+                  }
+
+                  if (logo.size > browserToolLimits.maxLogoBytes) {
+                    setLogoError('Choose a logo smaller than 2 MB.');
+                    return;
+                  }
+
+                  const bitmap = await createImageBitmap(logo);
+                  const tooLarge =
+                    bitmap.width > browserToolLimits.maxLogoDimension ||
+                    bitmap.height > browserToolLimits.maxLogoDimension;
+                  bitmap.close();
+
+                  if (tooLarge) {
+                    setLogoError('Choose a logo no larger than 4096 × 4096 pixels.');
+                    return;
+                  }
+
+                  if (logoPreview) {
+                    URL.revokeObjectURL(logoPreview);
+                  }
+
+                  setLogoError('');
+                  patch({ logo });
+                  setLogoPreview(URL.createObjectURL(logo));
+                }}
               />
-            </label>
-          ))}
-        </fieldset>
-        <fieldset>
-          <legend>Customer</legend>
-          {['name', 'company', 'address', 'email', 'phone'].map((key) => (
-            <label key={key}>
-              {key}
-              <input
-                value={doc.customer[key as keyof typeof doc.customer]}
-                onChange={(e) => patchParty('customer', key, e.target.value)}
-              />
-            </label>
-          ))}
-        </fieldset>
-      </div>
-      <div className="tp-document-grid">
-        <label>
-          Logo (PNG/JPG, max 2 MB)
-          <input
-            type="file"
-            accept="image/png,image/jpeg"
-            onChange={async (event) => {
-              const logo = event.target.files?.[0];
-
-              if (!logo) {
-                return;
-              }
-
-              if (logo.size > browserToolLimits.maxLogoBytes) {
-                setLogoError('Choose a logo smaller than 2 MB.');
-                return;
-              }
-
-              const bitmap = await createImageBitmap(logo);
-              const tooLarge =
-                bitmap.width > browserToolLimits.maxLogoDimension || bitmap.height > browserToolLimits.maxLogoDimension;
-              bitmap.close();
-              setLogoError(tooLarge ? 'Choose a logo no larger than 4096 × 4096 pixels.' : '');
-
-              if (!tooLarge) {
-                if (logoPreview) {
-                  URL.revokeObjectURL(logoPreview);
-                }
-
-                setDoc({ ...doc, logo });
-                setLogoPreview(URL.createObjectURL(logo));
-              }
-            }}
-          />
-        </label>
-        {logoPreview && <img className="tp-logo-preview" src={logoPreview} alt="Logo preview" />}
-        {logoError && (
-          <p className="tp-error" role="alert">
-            {logoError}
-          </p>
-        )}
-        {doc.logo && (
-          <button
-            onClick={() => {
-              URL.revokeObjectURL(logoPreview);
-              setLogoPreview('');
-              setDoc({ ...doc, logo: undefined });
-            }}
-          >
-            Remove logo
-          </button>
-        )}
-        <label>
-          Number
-          <input value={doc.number} onChange={(e) => setDoc({ ...doc, number: e.target.value })} />
-        </label>
-        <label>
-          Issue date
-          <input type="date" value={doc.issueDate} onChange={(e) => setDoc({ ...doc, issueDate: e.target.value })} />
-        </label>
-        <label>
-          {type === 'invoice' ? 'Due date' : 'Valid until'}
-          <input type="date" value={doc.dueDate} onChange={(e) => setDoc({ ...doc, dueDate: e.target.value })} />
-        </label>
-        <label>
-          Currency
-          <select value={doc.currency} onChange={(e) => setDoc({ ...doc, currency: e.target.value as Currency })}>
-            {['AED', 'USD', 'EUR', 'GBP', 'INR', 'SAR', 'QAR', 'OMR', 'KWD', 'BHD'].map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Template
-          <select
-            value={doc.template}
-            onChange={(e) => setDoc({ ...doc, template: e.target.value as BusinessDocument['template'] })}
-          >
-            <option>classic</option>
-            <option>minimal</option>
-            <option>modern</option>
-          </select>
-        </label>
-      </div>
-      <h3>Line items</h3>
-      <div className="tp-line-items">
-        {doc.items.map((item, index) => (
-          <article key={item.id}>
-            <label>
-              Description
-              <input value={item.description} onChange={(e) => updateItem(item.id, 'description', e.target.value)} />
-            </label>
-            {(['quantity', 'rate', 'tax', 'discount'] as const).map((key) => (
-              <label key={key}>
-                {key}
+              {logoPreview ? (
+                <>
+                  <img src={logoPreview} alt="Business logo preview" />
+                  <div>
+                    <label htmlFor={`${type}-logo`}>Replace</label>
+                    <button aria-label="Remove logo" onClick={removeLogo}>
+                      <X />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <label htmlFor={`${type}-logo`}>
+                  <ImagePlus aria-hidden="true" />
+                  <span>
+                    <strong>Add your logo</strong>
+                    <small>PNG or JPG · max 2 MB</small>
+                  </span>
+                </label>
+              )}
+              {logoError && (
+                <p className="tp-error" role="alert">
+                  {logoError}
+                </p>
+              )}
+            </div>
+            <div className="tp-document-identity">
+              <h2>{label.toUpperCase()}</h2>
+              <label>
+                <span>#</span>
                 <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={item[key]}
-                  onChange={(e) => updateItem(item.id, key, e.target.value)}
+                  aria-label={`${label} number`}
+                  value={document.number}
+                  onChange={(e) => patch({ number: e.target.value })}
                 />
               </label>
-            ))}
-            <div className="tp-engine-actions">
-              <button
-                aria-label={`Move ${item.description || 'item'} up`}
-                disabled={index === 0}
-                onClick={() => move(index, -1)}
-              >
-                <ArrowUp />
-              </button>
-              <button
-                aria-label={`Move ${item.description || 'item'} down`}
-                disabled={index === doc.items.length - 1}
-                onClick={() => move(index, 1)}
-              >
-                <ArrowDown />
-              </button>
-              <button
-                aria-label={`Remove ${item.description || 'item'}`}
-                disabled={doc.items.length === 1}
-                onClick={() => setDoc({ ...doc, items: doc.items.filter((row) => row.id !== item.id) })}
-              >
-                <Trash2 />
-              </button>
             </div>
-          </article>
-        ))}
-      </div>
-      <button onClick={() => setDoc({ ...doc, items: [...doc.items, makeItem()] })}>
-        <Plus /> Add item
-      </button>
-      <div className="tp-result-stats">
-        <span>
-          <strong>Subtotal</strong>
-          {formatCurrency(totals.subtotal, doc.currency)}
-        </span>
-        <span>
-          <strong>Discount</strong>
-          {formatCurrency(totals.discount, doc.currency)}
-        </span>
-        <span>
-          <strong>Tax</strong>
-          {formatCurrency(totals.tax, doc.currency)}
-        </span>
-        <span>
-          <strong>Grand total</strong>
-          {formatCurrency(totals.total, doc.currency)}
-        </span>
-      </div>
-      <label>
-        Notes
-        <textarea value={doc.notes} onChange={(e) => setDoc({ ...doc, notes: e.target.value })} />
-      </label>
-      <label>
-        Terms
-        <textarea value={doc.terms} onChange={(e) => setDoc({ ...doc, terms: e.target.value })} />
-      </label>
-      <div className="tp-engine-actions">
-        <button className="tp-primary" disabled={busy} onClick={() => void generate()}>
-          <Download />
-          {busy ? 'Generating…' : 'Download PDF'}
-        </button>
-        <button
-          onClick={() => {
-            if (logoPreview) {
-              URL.revokeObjectURL(logoPreview);
-            }
-
-            setLogoPreview('');
-            setLogoError('');
-            setDoc(initial(type));
-          }}
-        >
-          <RotateCcw /> Reset
-        </button>
+          </header>
+          <div className="tp-parties">
+            <PartyBlock
+              title="From"
+              party={document.business}
+              business
+              onChange={(key, value) => patchParty('business', key, value)}
+            />
+            <PartyBlock
+              title={type === 'invoice' ? 'Bill to' : 'Prepared for'}
+              party={document.customer}
+              onChange={(key, value) => patchParty('customer', key, value)}
+            />
+          </div>
+          <section className="tp-document-meta" aria-label="Document dates">
+            <label>
+              Issue date
+              <input type="date" value={document.issueDate} onChange={(e) => patch({ issueDate: e.target.value })} />
+            </label>
+            <label>
+              {type === 'invoice' ? 'Due date' : 'Valid until'}
+              <input type="date" value={document.dueDate} onChange={(e) => patch({ dueDate: e.target.value })} />
+            </label>
+          </section>
+          <section className="tp-line-editor" aria-labelledby={`${type}-items-heading`}>
+            <div className="tp-line-heading">
+              <h3 id={`${type}-items-heading`}>Line items</h3>
+              <span>
+                {document.items.length} {document.items.length === 1 ? 'item' : 'items'}
+              </span>
+            </div>
+            <div className="tp-line-table-head" aria-hidden="true">
+              <span>Item / description</span>
+              <span>Qty</span>
+              <span>Rate</span>
+              <span>Tax</span>
+              <span>Discount</span>
+              <span>Amount</span>
+              <span />
+            </div>
+            <div className="tp-line-items">
+              {document.items.map((item, index) => (
+                <article key={item.id}>
+                  <label>
+                    <span>Item / description</span>
+                    <input
+                      value={item.description}
+                      onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+                    />
+                  </label>
+                  {(['quantity', 'rate', 'tax', 'discount'] as const).map((key) => (
+                    <label key={key}>
+                      <span>{key === 'quantity' ? 'Qty' : key}</span>
+                      <input
+                        aria-label={`${item.description || 'Item'} ${key}`}
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item[key]}
+                        onChange={(e) => updateItem(item.id, key, e.target.value)}
+                      />
+                    </label>
+                  ))}
+                  <output aria-label={`${item.description || 'Item'} amount`}>
+                    {formatCurrency(lineTotal(item).total, document.currency)}
+                  </output>
+                  <div className="tp-line-actions">
+                    <button
+                      aria-label={`Move ${item.description || 'item'} up`}
+                      disabled={index === 0}
+                      onClick={() => moveItem(index, -1)}
+                    >
+                      <ArrowUp />
+                    </button>
+                    <button
+                      aria-label={`Move ${item.description || 'item'} down`}
+                      disabled={index === document.items.length - 1}
+                      onClick={() => moveItem(index, 1)}
+                    >
+                      <ArrowDown />
+                    </button>
+                    <button
+                      aria-label={`Remove ${item.description || 'item'}`}
+                      disabled={document.items.length === 1}
+                      onClick={() =>
+                        setDocument((current) => ({
+                          ...current,
+                          items: current.items.filter((row) => row.id !== item.id),
+                        }))
+                      }
+                    >
+                      <Trash2 />
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <button
+              className="tp-add-line"
+              onClick={() => setDocument((current) => ({ ...current, items: [...current.items, makeItem()] }))}
+            >
+              <Plus /> Add line item
+            </button>
+          </section>
+          <div className="tp-document-closing">
+            <section className="tp-document-copy">
+              <label>
+                Notes
+                <textarea
+                  placeholder="A short thank-you or message for your client"
+                  value={document.notes}
+                  onChange={(e) => patch({ notes: e.target.value })}
+                />
+              </label>
+              <label>
+                Terms
+                <textarea
+                  placeholder="Payment terms, delivery details, or validity conditions"
+                  value={document.terms}
+                  onChange={(e) => patch({ terms: e.target.value })}
+                />
+              </label>
+            </section>
+            <TotalsSummary document={document} />
+          </div>
+        </main>
+        <DocumentSettings
+          document={document}
+          busy={busy}
+          onChange={patch}
+          onDownload={() => void generate()}
+          onReset={reset}
+        />
       </div>
     </div>
   );
