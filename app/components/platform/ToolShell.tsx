@@ -7,6 +7,7 @@ import { track } from '~/lib/analytics';
 import { ToolCard } from './ToolCard';
 import { JsonFormatter } from './JsonFormatter';
 import { QrGenerator } from './QrGenerator';
+import { BrowserFileTool } from './BrowserFileTool';
 
 export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -22,6 +23,7 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const related = tools.filter((item) => item.category === tool.category && item.id !== tool.id).slice(0, 3);
   const isJson = tool.slug === 'json-formatter';
   const isQr = tool.slug === 'qr-generator';
+  const hasBrowserFileEngine = tool.engine === 'browser' && !isJson && !isQr;
 
   return (
     <div className="tp-page tp-tool-page">
@@ -46,6 +48,8 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
           <JsonFormatter />
         ) : isQr ? (
           <QrGenerator />
+        ) : hasBrowserFileEngine ? (
+          <BrowserFileTool tool={tool} />
         ) : (
           <div
             className="tp-upload"
@@ -98,8 +102,10 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
       <p className="tp-privacy">
         <LockKeyhole size={17} />
         <span>
-          <strong>Privacy by design.</strong> Browser-capable tools can keep work on your device. Each tool will state
-          its processing model before you begin.
+          <strong>Privacy by design.</strong>{' '}
+          {tool.engine === 'browser'
+            ? 'This tool processes your work locally in this browser session.'
+            : 'Each tool will state its processing model before you begin.'}
         </span>
       </p>
       <section className="tp-info">

@@ -44,6 +44,20 @@ The shell separates platform presentation from engines. Planned file tools suppo
 
 Heavy PDF, image, video, OCR, and AI engines should be dynamically imported from their tool workspace so they never enter global bundles. Browser processing is preferred for small, safe operations. Server or worker processing is appropriate for codecs, large jobs, secret-bearing AI calls, and operations that need durable queues.
 
+## Browser engine architecture
+
+Browser workspaces use shared `idle`, `files-selected`, `ready`, `processing`, `success`, and `error` phases. `BrowserFileTool` owns file selection and user-facing state; pure modules under `app/lib/tools/pdf` and `app/lib/tools/image` own transformations. The PDF layer imports `pdf-lib` dynamically inside operations, keeping it out of homepage and category entry bundles. The image layer uses `createImageBitmap`, canvas, and `toBlob` without an additional dependency.
+
+PDF operations support ordered image-to-PDF creation, ordered PDF merging, range extraction, per-page splitting, and accessible list-based page organization with reorder, rotate, and delete. Thumbnail rendering is intentionally deferred because no PDF renderer is installed and adding PDF.js solely for previews would materially increase the client payload.
+
+Image operations share MIME/extension mapping, aspect-ratio calculations, resizing, quality encoding, background flattening for JPEG, and canvas lifecycle cleanup. PNG quality controls are presented as re-encoding controls without promising size reduction.
+
+## File limits and downloads
+
+Limits are centralized in `app/lib/tools/limits.ts`: 20 files, 25 MB per file, 100 MB per session, and 40 megapixels per output image. These are defensive browser limits, not claims about every device's capacity. Generated files use `downloadBlob`, deterministic sanitized names, and delayed Blob URL revocation. Preview URLs and image bitmaps are released when replaced or unmounted; temporary canvases are cleared after encoding.
+
+To implement another browser tool, add its registry record with `engine: 'planned'`, implement and test a pure engine module, connect a workspace with honest processing/error/result states, emit provider-neutral analytics without filenames or contents, then switch the registry entry to `browser`. That final switch automatically includes the route in the sitemap.
+
 ## SEO strategy
 
 Tool and category metadata is generated from registry content. Routes support unique titles, descriptions, canonicals, Open Graph and Twitter fields, semantic headings, breadcrumbs, useful explanatory copy, and FAQ content. Add JSON-LD for WebApplication, BreadcrumbList, and FAQPage when final domain and production content are approved. Unfinished tools are deliberately excluded from the sitemap to avoid thin-page indexing.
