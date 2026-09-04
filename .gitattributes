@@ -1,0 +1,20 @@
+* text=auto eol=lf
+
+# Keep binary assets byte-for-byte.
+*.avif binary
+*.gif binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.wasm binary
+*.exe binary
+*.dll binary
