@@ -14,6 +14,24 @@ export function CategoryPage({ category }: { category: CategoryDefinition }) {
       ),
     [categoryTools, query],
   );
+  const calculatorGroups = [
+    ['Date & time', ['age-calculator', 'date-calculator', 'date-difference-calculator', 'time-calculator']],
+    ['Health', ['bmi-calculator', 'calorie-calculator']],
+    ['Math', ['percentage-calculator']],
+    [
+      'Finance',
+      [
+        'simple-interest-calculator',
+        'compound-interest-calculator',
+        'loan-calculator',
+        'emi-calculator',
+        'mortgage-calculator',
+        'investment-calculator',
+        'car-loan-calculator',
+        'amortization-calculator',
+      ],
+    ],
+  ] as const;
 
   return (
     <div className="tp-page">
@@ -33,11 +51,26 @@ export function CategoryPage({ category }: { category: CategoryDefinition }) {
             placeholder={`Search ${category.name.toLowerCase()} tools`}
           />
         </label>
-        <div className="tp-tool-grid">
-          {visible.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
+        {category.id === 'calculator' && !query ? (
+          calculatorGroups.map(([name, ids]) => (
+            <section className="tp-catalog-group" key={name}>
+              <h2>{name}</h2>
+              <div className="tp-tool-grid">
+                {visible
+                  .filter((tool) => ids.includes(tool.id as never))
+                  .map((tool) => (
+                    <ToolCard key={tool.id} tool={tool} />
+                  ))}
+              </div>
+            </section>
+          ))
+        ) : (
+          <div className="tp-tool-grid">
+            {visible.map((tool) => (
+              <ToolCard key={tool.id} tool={tool} />
+            ))}
+          </div>
+        )}
         {!visible.length && (
           <div className="tp-empty">
             <h2>No matching tools</h2>

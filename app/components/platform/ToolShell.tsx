@@ -15,6 +15,7 @@ import { UtilityTool } from './UtilityTool';
 import { CsvTool } from './CsvTool';
 import { BusinessDocumentTool } from './BusinessDocumentTool';
 import { SignatureTool } from './SignatureTool';
+import { CalculatorTool } from './CalculatorTool';
 
 export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -49,6 +50,7 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
   ].includes(tool.slug);
   const isCsv = tool.slug === 'csv-to-json' || tool.slug === 'json-to-csv';
   const isBusinessDocument = tool.slug === 'invoice-generator' || tool.slug === 'quotation-generator';
+  const isCalculator = tool.category === 'calculator';
   const isAdvancedPdf = [
     'pdf-to-jpg',
     'pdf-to-png',
@@ -57,7 +59,7 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
     'extract-pdf-pages',
     'add-page-numbers-to-pdf',
   ].includes(tool.slug);
-  const hasBrowserFileEngine = tool.engine === 'browser' && !isJson && !isQr;
+  const hasBrowserFileEngine = tool.engine === 'browser' && !isJson && !isQr && !isCalculator;
 
   return (
     <div className="tp-page tp-tool-page">
@@ -78,7 +80,9 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
         </span>
       </header>
       <section className="tp-workspace" aria-label={`${tool.name} workspace`}>
-        {isJson ? (
+        {isCalculator ? (
+          <CalculatorTool slug={tool.id} />
+        ) : isJson ? (
           <JsonFormatter />
         ) : isQr ? (
           <QrGenerator />

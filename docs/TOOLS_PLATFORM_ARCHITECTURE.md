@@ -11,6 +11,7 @@ Brand and company values live in `app/config/platform.ts`. Replace that one obje
 - `/` — public platform homepage
 - `/tools` — complete registry-driven directory
 - `/pdf`, `/image`, `/video`, `/audio`, `/business`, `/developer`, `/ai`, `/web` — reusable category pages
+- `/calculator` and `/calculator/:slug` — grouped calculator catalog and registry-backed calculator tools
 - `/:slug` — registry-backed tool or category route with a real 404 for unknown entries
 - `/builder` — preserved AI website builder
 - `/sitemap.xml` — homepage, directory, categories, and only tools with working engines
@@ -23,6 +24,7 @@ The dynamic route means a tool becomes routable when it is added to the registry
 - `CategoryPage` filters and displays any category supplied from the registry.
 - `ToolShell` owns breadcrumbs, identity, workspace, privacy disclosure, engine status, supporting copy, related tools, and FAQ.
 - `ToolCard`, `ToolIcon`, and `GlobalToolSearch` render registry data consistently.
+- `CalculatorTool` renders configuration-driven forms and results while pure formulas remain under `app/lib/tools/calculators`.
 - `JsonFormatter`, `QrGenerator`, `AdvancedPdfTool`, and `OcrTool` are focused browser-side engines.
 - `AdSlot` is disabled by default and renders nothing until explicitly enabled.
 
@@ -55,6 +57,8 @@ Image operations share MIME/extension mapping, aspect-ratio and percentage calcu
 OCR is isolated behind `OcrTool`. Tesseract.js, its worker, WebAssembly runtime, and selected language model load only after the user starts recognition. The worker is explicitly terminated after success or failure. Input images and extracted text stay in the browser.
 
 Browser media follows a WebCodecs-first strategy through Mediabunny; the GPL FFmpeg WASM core is not used. Media code is isolated under `app/lib/tools/media` and dynamically imported only by media workspaces. Container support never implies codec support: future remux and transcode actions must query the current browser before enabling an output. `MediaInfoTool` is the first low-risk integration and disposes every input after inspection.
+
+Calculator engines are pure, dependency-free modules. Date-only arithmetic uses UTC calendar fields and real month lengths. Loan, EMI, mortgage, car-loan, and amortization experiences reuse one reducing-balance engine; investment reuses compound growth. Calculator analytics contain only slug/category/status metadata and never entered or calculated values.
 
 Developer and text utilities share pure transformations under `app/lib/tools/utilities` and the `UtilityTool` workspace. Unicode-safe Base64 uses `TextEncoder`/`TextDecoder`; hashes use Web Crypto; UUIDs and passwords use cryptographically secure browser randomness. JWT handling decodes only and never claims signature validity. No input text, token, hash, password, or generated value is sent to analytics.
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { searchTools, tools } from './registry';
+import { searchTools, tools, toolsForCategory } from './registry';
 describe('tool registry', () => {
   it('has unique slugs', () => expect(new Set(tools.map((tool) => tool.slug)).size).toBe(tools.length));
   it('marks implemented browser tools ready', () => {
@@ -70,5 +70,12 @@ describe('tool registry', () => {
 
     Object.entries(queries).forEach(([query, slug]) => expect(searchTools(query)[0]?.slug).toBe(slug));
     expect(searchTools('mp4 mp3')).toEqual([]);
+  });
+  it('registers the complete working calculator category', () => {
+    const calculators = toolsForCategory('calculator');
+    expect(calculators).toHaveLength(15);
+    expect(calculators.every((tool) => tool.engine === 'browser' && tool.slug.startsWith('calculator/'))).toBe(true);
+    expect(searchTools('how old am I')[0]?.id).toBe('age-calculator');
+    expect(searchTools('monthly installment')[0]?.id).toBe('emi-calculator');
   });
 });

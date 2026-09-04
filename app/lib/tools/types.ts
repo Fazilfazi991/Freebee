@@ -1,4 +1,4 @@
-export type ToolCategory = 'pdf' | 'image' | 'video' | 'audio' | 'business' | 'developer' | 'ai' | 'web';
+export type ToolCategory = 'pdf' | 'image' | 'video' | 'audio' | 'business' | 'developer' | 'ai' | 'web' | 'calculator';
 export type EngineStatus = 'browser' | 'planned';
 
 export type ToolDefinition = {
