@@ -60,7 +60,7 @@ function PartyBlock({
     <section className="tp-party-block" aria-label={title}>
       <p className="tp-document-kicker">{title}</p>
       <input
-        className="tp-party-name"
+        className="tp-document-field tp-party-name"
         aria-label={`${title} name`}
         placeholder={business ? 'Your business name' : 'Client name'}
         value={party.name}
@@ -68,6 +68,7 @@ function PartyBlock({
       />
       {'company' in party && (
         <input
+          className="tp-document-field"
           aria-label="Client company"
           placeholder="Company (optional)"
           value={party.company}
@@ -75,6 +76,7 @@ function PartyBlock({
         />
       )}
       <textarea
+        className="tp-document-field tp-document-textarea"
         aria-label={`${title} address`}
         placeholder="Street address, city, country"
         value={party.address}
@@ -82,6 +84,7 @@ function PartyBlock({
       />
       <div className="tp-party-contact">
         <input
+          className="tp-document-field"
           type="email"
           aria-label={`${title} email`}
           placeholder="email@example.com"
@@ -89,6 +92,7 @@ function PartyBlock({
           onChange={(e) => onChange('email', e.target.value)}
         />
         <input
+          className="tp-document-field"
           type="tel"
           aria-label={`${title} phone`}
           placeholder="Phone number"
@@ -98,6 +102,7 @@ function PartyBlock({
       </div>
       {business && 'taxId' in party && (
         <input
+          className="tp-document-field"
           aria-label="Tax or VAT number"
           placeholder="Tax / VAT number (optional)"
           value={party.taxId}
@@ -173,7 +178,11 @@ function DocumentSettings({
         <h3>Document settings</h3>
         <label>
           Currency
-          <select value={document.currency} onChange={(e) => onChange({ currency: e.target.value as Currency })}>
+          <select
+            className="tp-document-field tp-document-select"
+            value={document.currency}
+            onChange={(e) => onChange({ currency: e.target.value as Currency })}
+          >
             {currencies.map((currency) => (
               <option key={currency}>{currency}</option>
             ))}
@@ -322,6 +331,7 @@ export function BusinessDocumentTool({ type }: { type: BusinessDocument['type'] 
               <label>
                 <span>#</span>
                 <input
+                  className="tp-document-field"
                   aria-label={`${label} number`}
                   value={document.number}
                   onChange={(e) => patch({ number: e.target.value })}
@@ -345,11 +355,21 @@ export function BusinessDocumentTool({ type }: { type: BusinessDocument['type'] 
           <section className="tp-document-meta" aria-label="Document dates">
             <label>
               Issue date
-              <input type="date" value={document.issueDate} onChange={(e) => patch({ issueDate: e.target.value })} />
+              <input
+                className="tp-document-field tp-document-date"
+                type="date"
+                value={document.issueDate}
+                onChange={(e) => patch({ issueDate: e.target.value })}
+              />
             </label>
             <label>
               {type === 'invoice' ? 'Due date' : 'Valid until'}
-              <input type="date" value={document.dueDate} onChange={(e) => patch({ dueDate: e.target.value })} />
+              <input
+                className="tp-document-field tp-document-date"
+                type="date"
+                value={document.dueDate}
+                onChange={(e) => patch({ dueDate: e.target.value })}
+              />
             </label>
           </section>
           <section className="tp-line-editor" aria-labelledby={`${type}-items-heading`}>
@@ -374,6 +394,7 @@ export function BusinessDocumentTool({ type }: { type: BusinessDocument['type'] 
                   <label>
                     <span>Item / description</span>
                     <input
+                      className="tp-document-field"
                       value={item.description}
                       onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                     />
@@ -382,6 +403,7 @@ export function BusinessDocumentTool({ type }: { type: BusinessDocument['type'] 
                     <label key={key}>
                       <span>{key === 'quantity' ? 'Qty' : key}</span>
                       <input
+                        className="tp-document-field"
                         aria-label={`${item.description || 'Item'} ${key}`}
                         type="number"
                         min="0"
@@ -437,6 +459,7 @@ export function BusinessDocumentTool({ type }: { type: BusinessDocument['type'] 
               <label>
                 Notes
                 <textarea
+                  className="tp-document-field tp-document-textarea"
                   placeholder="A short thank-you or message for your client"
                   value={document.notes}
                   onChange={(e) => patch({ notes: e.target.value })}
@@ -445,6 +468,7 @@ export function BusinessDocumentTool({ type }: { type: BusinessDocument['type'] 
               <label>
                 Terms
                 <textarea
+                  className="tp-document-field tp-document-textarea"
                   placeholder="Payment terms, delivery details, or validity conditions"
                   value={document.terms}
                   onChange={(e) => patch({ terms: e.target.value })}

@@ -1155,7 +1155,7 @@ body {
 .tp-party-block {
   display: grid;
   align-content: start;
-  gap: 0.25rem;
+  gap: 0.6rem;
 }
 .tp-document-kicker {
   margin: 0 0 0.45rem;
@@ -1165,37 +1165,60 @@ body {
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
-.tp-document-paper input,
-.tp-document-paper textarea {
+.tp-document-field {
   width: 100%;
-  padding: 0.38rem 0.45rem;
-  color: inherit;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 0.25rem;
+  min-height: 2.75rem;
+  padding: 0.62rem 0.7rem;
+  color: #172033;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.45rem;
+  font: inherit;
+  line-height: 1.35;
+  transition:
+    border-color 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease;
 }
-.tp-document-paper input:hover,
-.tp-document-paper textarea:hover {
-  border-color: #d7dde5;
+.tp-document-field::placeholder {
+  color: #64748b;
+  opacity: 1;
 }
-.tp-document-paper input:focus,
-.tp-document-paper textarea:focus {
+.tp-document-field:hover {
+  background: #fdfefe;
+  border-color: #94a3b8;
+}
+.tp-document-field:focus,
+.tp-document-field:focus-visible {
   background: #fff;
   border-color: var(--doc-accent);
-  outline: 2px solid color-mix(in srgb, var(--doc-accent) 18%, transparent);
+  outline: 0;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--doc-accent) 18%, transparent);
+}
+.tp-document-field[aria-invalid='true'] {
+  border-color: #be123c;
+  box-shadow: 0 0 0 3px rgb(190 18 60 / 12%);
+}
+.tp-document-select,
+.tp-document-date {
+  color-scheme: light;
+  cursor: pointer;
+}
+.tp-document-textarea {
+  resize: vertical;
 }
 .tp-party-name {
   font-size: 1rem;
   font-weight: 750;
 }
 .tp-party-block textarea {
-  min-height: 3.3rem;
-  resize: vertical;
+  min-height: 4rem;
+  max-height: 9rem;
 }
 .tp-party-contact {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 0.25rem;
+  gap: 0.6rem;
 }
 .tp-document-meta {
   display: flex;
@@ -1215,6 +1238,7 @@ body {
   text-transform: uppercase;
 }
 .tp-document-meta input {
+  min-width: 10rem;
   font-size: 0.85rem;
   font-weight: 650;
   text-transform: none;
@@ -1265,7 +1289,10 @@ body {
 }
 .tp-line-items input {
   min-width: 0;
-  padding-inline: 0.3rem;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.5rem;
+  border-color: #d7dee7;
+  border-radius: 0.35rem;
 }
 .tp-line-items output {
   text-align: right;
@@ -1323,7 +1350,6 @@ body {
   font-size: 0.85rem;
   font-weight: 400;
   text-transform: none;
-  resize: vertical;
 }
 .tp-document-totals {
   display: grid;
@@ -1594,6 +1620,14 @@ body {
   .tp-party-contact {
     grid-template-columns: 1fr;
   }
+  .tp-document-field {
+    min-height: 2.75rem;
+    font-size: 16px;
+  }
+  .tp-party-block textarea,
+  .tp-document-copy textarea {
+    min-height: 5rem;
+  }
   .tp-document-meta {
     display: grid;
     grid-template-columns: 1fr;
@@ -1628,6 +1662,9 @@ body {
     font-size: 0.68rem;
     font-weight: 750;
     text-transform: capitalize;
+  }
+  .tp-line-items input {
+    min-height: 2.75rem;
   }
   .tp-line-items output {
     padding-top: 0.4rem;
