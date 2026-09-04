@@ -17,7 +17,7 @@
     "dev:local": "remix vite:dev --mode localdev --host 127.0.0.1",
     "test": "vitest --run",
     "test:watch": "vitest",
-    "phones:ingest": "node scripts/phones-ingest.mjs",
+    "phones:ingest": "node --import ./scripts/register-typescript.mjs scripts/phones-ingest.ts",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint app",
     "lint:fix": "npm run lint -- --fix && prettier app --write",
     "start:windows": "wrangler pages dev ./build/client",

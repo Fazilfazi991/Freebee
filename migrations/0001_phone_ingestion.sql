@@ -1,16 +1,3 @@
-# Phone D1 migration plan
-
-Status: adapter and migration implemented but intentionally unbound. No database, credentials, production migration, or deployment changes are included. Local D1 runtime validation remains unavailable because of the confirmed Windows Miniflare crash; transaction behavior is covered with integration mocks.
-
-## Repository boundary
-
-`PhoneRepository` remains the public synchronous read boundary. `D1PhoneDataStore` implements the asynchronous store boundary for a future loader-based binding; it is not wired into routes yet. Routes must never import D1 directly. Writes use D1 `batch()` transaction semantics and never publish a changed candidate without review.
-
-The transaction first creates an auditable `running` ingestion record. It then atomically upserts the source and normalized phone, stores provenance and pending changes, and completes the run. A rejected batch leaves no partially published data and updates the already-created run to `failed`.
-
-## Proposed schema
-
-```sql
 CREATE TABLE phones (
   id TEXT PRIMARY KEY,
   brand TEXT NOT NULL CHECK (brand IN ('apple', 'samsung', 'google')),
@@ -19,9 +6,7 @@ CREATE TABLE phones (
   series TEXT NOT NULL,
   variant_name TEXT,
   quality TEXT NOT NULL CHECK (quality IN ('verified', 'partial', 'needs-review')),
-  publication_state TEXT NOT NULL CHECK (
-    publication_state IN ('draft', 'verified', 'partial', 'needs-review', 'published')
-  ),
+  publication_state TEXT NOT NULL CHECK (publication_state IN ('draft', 'verified', 'partial', 'needs-review', 'published')),
   parser_version TEXT NOT NULL,
   normalized_json TEXT NOT NULL CHECK (json_valid(normalized_json)),
   created_at TEXT NOT NULL,
@@ -29,9 +14,7 @@ CREATE TABLE phones (
   published_at TEXT,
   UNIQUE (brand, slug)
 );
-
-CREATE INDEX phones_public_brand_idx
-  ON phones (publication_state, brand, model);
+CREATE INDEX phones_public_brand_idx ON phones (publication_state, brand, model);
 
 CREATE TABLE phone_sources (
   id TEXT PRIMARY KEY,
@@ -45,7 +28,6 @@ CREATE TABLE phone_sources (
   last_changed_at TEXT NOT NULL,
   UNIQUE (phone_id, official_url, region)
 );
-
 CREATE INDEX phone_sources_hash_idx ON phone_sources (source_hash);
 CREATE INDEX phone_sources_phone_retrieved_idx ON phone_sources (phone_id, retrieved_at DESC);
 
@@ -59,7 +41,6 @@ CREATE TABLE field_provenance (
   parser_version TEXT NOT NULL,
   PRIMARY KEY (phone_id, field_path, source_id)
 );
-
 CREATE INDEX field_provenance_source_idx ON field_provenance (source_id);
 
 CREATE TABLE ingestion_runs (
@@ -68,14 +49,11 @@ CREATE TABLE ingestion_runs (
   model TEXT,
   started_at TEXT NOT NULL,
   completed_at TEXT,
-  status TEXT NOT NULL CHECK (
-    status IN ('running', 'blocked', 'failed', 'awaiting-review', 'completed')
-  ),
+  status TEXT NOT NULL CHECK (status IN ('running', 'blocked', 'failed', 'awaiting-review', 'completed')),
   http_status INTEGER,
   parser_version TEXT NOT NULL,
   validation_issues_json TEXT NOT NULL DEFAULT '[]' CHECK (json_valid(validation_issues_json))
 );
-
 CREATE INDEX ingestion_runs_target_idx ON ingestion_runs (brand, model, started_at DESC);
 CREATE INDEX ingestion_runs_status_idx ON ingestion_runs (status, started_at DESC);
 
@@ -92,24 +70,5 @@ CREATE TABLE ingestion_changes (
   reviewed_by TEXT,
   UNIQUE (run_id, phone_id, field_path)
 );
-
 CREATE INDEX ingestion_changes_review_idx ON ingestion_changes (review_status, run_id);
 CREATE INDEX ingestion_changes_phone_idx ON ingestion_changes (phone_id, run_id);
-```
-
-## Migration sequence
-
-1. Approve schema, retention, reviewer identity, and D1 binding names.
-2. Review the forward-only migration and `D1PhoneDataStore`; retain `JsonSnapshotPhoneStore` for tests and local fallback.
-3. Import the nine normalized records as unpublished candidates, preserving source hashes, parser versions, and field provenance.
-4. Reconcile record counts and normalized JSON against the snapshot; verify brand/slug uniqueness and foreign keys.
-5. Run repository contract tests against both stores.
-6. Mark reviewed records `published`, then switch the runtime binding behind configuration without changing routes.
-7. Keep a rollback path that selects the JSON store; never down-migrate by deleting reviewed production data.
-
-## Decisions required before binding
-
-- D1 database/binding names per environment.
-- Retention policy for runs, source snapshots, and rejected changes.
-- Reviewer identity/audit requirements.
-- Whether normalized sections remain JSON or move into typed child tables after real query patterns are measured.
