@@ -29,6 +29,29 @@ export function decodeJwt(token: string) {
   return { header: parse(parts[0]), payload: parse(parts[1]) };
 }
 
+export function jwtTimestamps(payload: Record<string, unknown>, now = Date.now()) {
+  return (['iat', 'nbf', 'exp'] as const).flatMap((claim) => {
+    const seconds = payload[claim];
+
+    if (typeof seconds !== 'number' || !Number.isFinite(seconds)) {
+      return [];
+    }
+
+    const date = new Date(seconds * 1000);
+    let status = 'Recorded time';
+
+    if (claim === 'exp') {
+      status = date.valueOf() <= now ? 'Expired' : 'Not expired';
+    }
+
+    if (claim === 'nbf') {
+      status = date.valueOf() > now ? 'Not active yet' : 'Active';
+    }
+
+    return [{ claim, unix: seconds, utc: date.toISOString(), local: date.toLocaleString(), status }];
+  });
+}
+
 export async function hashValue(value: string | ArrayBuffer, algorithm: 'SHA-256' | 'SHA-384' | 'SHA-512') {
   const data = typeof value === 'string' ? new TextEncoder().encode(value) : value;
   const digest = await crypto.subtle.digest(algorithm, data);
@@ -93,11 +116,20 @@ const groups = {
   symbol: '!@#$%^&*_-+=',
 };
 
-export function generatePassword(length: number, enabled = Object.keys(groups)) {
-  const selected = enabled.map((key) => groups[key as keyof typeof groups]).filter(Boolean);
+export function generatePassword(length: number, enabled = Object.keys(groups), excluded = '') {
+  const excludedCharacters = new Set(excluded);
+  const selected = enabled
+    .map((key) => groups[key as keyof typeof groups])
+    .filter(Boolean)
+    .map((group) => [...group].filter((character) => !excludedCharacters.has(character)).join(''))
+    .filter(Boolean);
 
   if (!selected.length) {
     throw new Error('Select at least one character group.');
+  }
+
+  if (length < selected.length) {
+    throw new Error(`Use at least ${selected.length} characters to include every selected group.`);
   }
 
   const pool = selected.join('');

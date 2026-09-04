@@ -12,6 +12,9 @@ import { AdvancedPdfTool } from './AdvancedPdfTool';
 import { OcrTool } from './OcrTool';
 import { MediaInfoTool } from './MediaInfoTool';
 import { UtilityTool } from './UtilityTool';
+import { CsvTool } from './CsvTool';
+import { BusinessDocumentTool } from './BusinessDocumentTool';
+import { SignatureTool } from './SignatureTool';
 
 export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -44,6 +47,8 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
     'json-validator',
     'password-generator',
   ].includes(tool.slug);
+  const isCsv = tool.slug === 'csv-to-json' || tool.slug === 'json-to-csv';
+  const isBusinessDocument = tool.slug === 'invoice-generator' || tool.slug === 'quotation-generator';
   const isAdvancedPdf = [
     'pdf-to-jpg',
     'pdf-to-png',
@@ -83,6 +88,12 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
           <MediaInfoTool />
         ) : isUtility ? (
           <UtilityTool slug={tool.slug} />
+        ) : isCsv ? (
+          <CsvTool mode={tool.slug as 'csv-to-json' | 'json-to-csv'} />
+        ) : isBusinessDocument ? (
+          <BusinessDocumentTool type={tool.slug === 'invoice-generator' ? 'invoice' : 'quotation'} />
+        ) : tool.slug === 'signature-generator' ? (
+          <SignatureTool />
         ) : isAdvancedPdf ? (
           <AdvancedPdfTool tool={tool} />
         ) : hasBrowserFileEngine ? (

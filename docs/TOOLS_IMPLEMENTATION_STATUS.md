@@ -44,4 +44,6 @@ Mediabunny replaces the rejected FFmpeg WASM proposal. No FFmpeg core or optiona
 
 The following dependency-free routes are implemented with native browser APIs and are sitemap-eligible: `/uuid-generator`, `/base64-encoder`, `/base64-decoder`, `/url-encoder`, `/url-decoder`, `/jwt-decoder`, `/hash-generator`, `/timestamp-converter`, `/word-counter`, `/character-counter`, `/text-case-converter`, `/json-validator`, and `/password-generator`.
 
-CSV conversion and invoice, quotation, and signature generation remain planned for the next batch; they were not represented as working without their required shared parser/document UX and browser verification.
+## Business document and CSV phase
+
+`/csv-to-json`, `/json-to-csv`, `/invoice-generator`, `/quotation-generator`, and `/signature-generator` are implemented and sitemap-eligible. CSV uses Papa Parse 5.7.0. Invoice and quotation share pdf-lib calculations and rendering; signature output uses a local transparent canvas. Browser output verification is recorded after the current validation pass.

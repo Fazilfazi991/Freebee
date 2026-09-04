@@ -8,6 +8,7 @@ import {
   encodeBase64,
   generatePassword,
   hashValue,
+  jwtTimestamps,
   textStats,
 } from '~/lib/tools/utilities/engine';
 
@@ -19,6 +20,12 @@ export function UtilityTool({ slug }: { slug: string }) {
   const [error, setError] = useState('');
   const [quantity, setQuantity] = useState(5);
   const [algorithm, setAlgorithm] = useState<'SHA-256' | 'SHA-384' | 'SHA-512'>('SHA-256');
+  const [hashFile, setHashFile] = useState<File>();
+  const [passwordCount, setPasswordCount] = useState(1);
+  const [passwordGroups, setPasswordGroups] = useState(['lower', 'upper', 'number', 'symbol']);
+  const [excluded, setExcluded] = useState('');
+  const [excludeAmbiguous, setExcludeAmbiguous] = useState(false);
+  const [jwtClaims, setJwtClaims] = useState<ReturnType<typeof jwtTimestamps>>([]);
   const stats = useMemo(() => textStats(input), [input]);
   const run = async (action = slug) => {
     setError('');
@@ -37,12 +44,17 @@ export function UtilityTool({ slug }: { slug: string }) {
       } else if (action === 'jwt-decoder') {
         const value = decodeJwt(input);
         setOutput(JSON.stringify(value, null, 2));
+        setJwtClaims(jwtTimestamps(value.payload));
       } else if (action === 'hash-generator') {
-        setOutput(await hashValue(input, algorithm));
+        setOutput(await hashValue(hashFile ? await hashFile.arrayBuffer() : input, algorithm));
       } else if (action === 'json-validator') {
         setOutput(JSON.stringify(JSON.parse(input), null, 2));
       } else if (action === 'password-generator') {
-        setOutput(generatePassword(quantity));
+        setOutput(
+          Array.from({ length: passwordCount }, () =>
+            generatePassword(quantity, passwordGroups, excluded + (excludeAmbiguous ? '1IlO0' : '')),
+          ).join('\n'),
+        );
       } else if (action === 'text-case-converter') {
         setOutput(convertCase(input, 'title'));
       }
@@ -114,11 +126,74 @@ export function UtilityTool({ slug }: { slug: string }) {
         </label>
       )}
       {slug === 'hash-generator' && (
-        <select value={algorithm} onChange={(event) => setAlgorithm(event.target.value as typeof algorithm)}>
-          <option>SHA-256</option>
-          <option>SHA-384</option>
-          <option>SHA-512</option>
-        </select>
+        <>
+          <label>
+            Or hash a file
+            <input type="file" onChange={(event) => setHashFile(event.target.files?.[0])} />
+          </label>
+          {hashFile && (
+            <p className="tp-preview-note">
+              {hashFile.name} · {hashFile.size.toLocaleString()} bytes
+            </p>
+          )}
+          <select value={algorithm} onChange={(event) => setAlgorithm(event.target.value as typeof algorithm)}>
+            <option>SHA-256</option>
+            <option>SHA-384</option>
+            <option>SHA-512</option>
+          </select>
+        </>
+      )}
+      {slug === 'password-generator' && (
+        <div className="tp-document-grid">
+          <fieldset>
+            <legend>Character groups</legend>
+            {[
+              ['lower', 'Lowercase'],
+              ['upper', 'Uppercase'],
+              ['number', 'Numbers'],
+              ['symbol', 'Symbols'],
+            ].map(([key, label]) => (
+              <label key={key}>
+                <input
+                  type="checkbox"
+                  checked={passwordGroups.includes(key)}
+                  onChange={(event) =>
+                    setPasswordGroups(
+                      event.target.checked ? [...passwordGroups, key] : passwordGroups.filter((item) => item !== key),
+                    )
+                  }
+                />
+                {label}
+              </label>
+            ))}
+          </fieldset>
+          <label>
+            Passwords to generate
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={passwordCount}
+              onChange={(event) => setPasswordCount(Number(event.target.value))}
+            />
+          </label>
+          <label>
+            Exclude characters
+            <input
+              value={excluded}
+              onChange={(event) => setExcluded(event.target.value)}
+              placeholder="For example: 1IlO0"
+            />
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={excludeAmbiguous}
+              onChange={(event) => setExcludeAmbiguous(event.target.checked)}
+            />
+            Exclude ambiguous characters (1, I, l, O, 0)
+          </label>
+        </div>
       )}
       {slug === 'text-case-converter' ? (
         <div className="tp-engine-actions">
@@ -141,6 +216,22 @@ export function UtilityTool({ slug }: { slug: string }) {
       {output && (
         <>
           <textarea readOnly value={output} />
+          {slug === 'jwt-decoder' && jwtClaims.length > 0 && (
+            <div className="tp-result-stats">
+              {jwtClaims.map((claim) => (
+                <span key={claim.claim}>
+                  <strong>
+                    {claim.claim.toUpperCase()} · {claim.status}
+                  </strong>
+                  {claim.utc}
+                  <br />
+                  Local: {claim.local}
+                  <br />
+                  Unix: {claim.unix}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="tp-engine-actions">
             <button onClick={() => void copy(output)}>
               <Copy /> Copy
@@ -153,6 +244,8 @@ export function UtilityTool({ slug }: { slug: string }) {
                 setInput('');
                 setOutput('');
                 setError('');
+                setHashFile(undefined);
+                setJwtClaims([]);
               }}
             >
               <RotateCcw /> Reset

@@ -1014,6 +1014,73 @@ body {
   display: grid;
   gap: 0.45rem;
 }
+
+.tp-document-tool,
+.tp-signature {
+  display: grid;
+  gap: 1rem;
+}
+
+.tp-document-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 0.8rem;
+}
+
+.tp-document-tool fieldset,
+.tp-line-items article {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border: 1px solid var(--tp-border);
+  border-radius: 0.85rem;
+}
+
+.tp-line-items {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tp-line-items article {
+  grid-template-columns: minmax(10rem, 2fr) repeat(4, minmax(5.5rem, 1fr)) auto;
+}
+
+.tp-document-tool label,
+.tp-line-items label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.tp-signature canvas {
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  border: 1px solid var(--tp-border);
+  border-radius: 0.85rem;
+  background-image:
+    linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%);
+  background-size: 20px 20px;
+}
+
+.tp-logo-preview {
+  width: auto;
+  max-width: 160px;
+  height: auto;
+  max-height: 80px;
+  object-fit: contain;
+}
+
+@media (max-width: 700px) {
+  .tp-line-items article {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tp-line-items article label:first-child,
+  .tp-line-items article .tp-engine-actions {
+    grid-column: 1 / -1;
+  }
+}
 .tp-page-list {
   display: flex;
   flex-direction: column;

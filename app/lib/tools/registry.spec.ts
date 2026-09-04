@@ -37,6 +37,11 @@ describe('tool registry', () => {
       'text-case-converter',
       'json-validator',
       'password-generator',
+      'csv-to-json',
+      'json-to-csv',
+      'invoice-generator',
+      'quotation-generator',
+      'signature-generator',
     ];
     expected.forEach((slug) => expect(tools.find((tool) => tool.slug === slug)?.engine).toBe('browser'));
   });

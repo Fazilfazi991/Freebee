@@ -13,5 +13,6 @@ Existing packages used by this surface:
 | `pdfjs-dist` 5.7.284 | https://github.com/mozilla/pdf.js | Apache-2.0 | Lazy browser-side PDF rendering for thumbnails and image export; its worker is loaded only by PDF rendering tools. |
 | `tesseract.js` 7.0.0 | https://github.com/naptha/tesseract.js | Apache-2.0 | Lazy browser/WASM OCR with an English model and explicit worker termination. |
 | `mediabunny` 1.55.6 | https://github.com/Vanilagy/mediabunny | MPL-2.0 | Lazy, WebCodecs-first browser media inspection and future capability-gated remux/transcode operations. The library is used unmodified; its license and notices must be retained. |
+| `papaparse` 5.7.0 | https://github.com/mholt/PapaParse | MIT | Standards-compliant browser CSV parsing and serialization, including quoting, multiline fields, delimiter detection, and formula escaping. It has no runtime dependencies. |
 
 Any future dependency must be recorded here before it is added. Permissive MIT, Apache-2.0, and BSD licenses are preferred for this commercial product.
