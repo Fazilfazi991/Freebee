@@ -24,7 +24,7 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
     setFiles(next);
 
     if (next.length) {
-      track('tool_upload', { tool: tool.slug, count: next.length });
+      track('tool_upload', { toolSlug: tool.slug, processingLocation: 'browser' });
     }
   };
   const related = tools.filter((item) => item.category === tool.category && item.id !== tool.id).slice(0, 3);

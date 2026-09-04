@@ -17,7 +17,7 @@ export function QrGenerator() {
     a.href = canvas.toDataURL('image/png');
     a.download = 'qr-code.png';
     a.click();
-    track('tool_download', { tool: 'qr-generator' });
+    track('tool_download', { toolSlug: 'qr-generator' });
   };
 
   return (

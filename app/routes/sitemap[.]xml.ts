@@ -7,6 +7,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const paths = [
     '',
     'tools',
+    'privacy',
+    'terms',
+    'cookies',
     ...categories.map((c) => c.id),
     ...tools.filter((t) => t.engine === 'browser').map((t) => t.slug),
   ];

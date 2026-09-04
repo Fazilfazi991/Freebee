@@ -1,7 +1,7 @@
-import Papa from 'papaparse';
+export async function csvToJson(input: string, header = true, delimiter = '') {
+  const { default: papa } = await import('papaparse');
+  const result = papa.parse(input, { header, delimiter, skipEmptyLines: true });
 
-export function csvToJson(input: string, header = true, delimiter = '') {
-  const result = Papa.parse(input, { header, delimiter, skipEmptyLines: true });
   return {
     rows: result.data,
     delimiter: result.meta.delimiter,
@@ -9,7 +9,7 @@ export function csvToJson(input: string, header = true, delimiter = '') {
   };
 }
 
-export function jsonToCsv(input: string, delimiter = ',') {
+export async function jsonToCsv(input: string, delimiter = ',') {
   const value: unknown = JSON.parse(input);
 
   if (!Array.isArray(value) || value.some((row) => !row || typeof row !== 'object' || Array.isArray(row))) {
@@ -22,5 +22,7 @@ export function jsonToCsv(input: string, delimiter = ',') {
     }
   }
 
-  return Papa.unparse(value as Record<string, unknown>[], { delimiter, escapeFormulae: true });
+  const { default: papa } = await import('papaparse');
+
+  return papa.unparse(value as Record<string, unknown>[], { delimiter, escapeFormulae: true });
 }

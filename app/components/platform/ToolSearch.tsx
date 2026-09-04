@@ -23,10 +23,10 @@ export function GlobalToolSearch({ autoFocus = false, onSelect }: { autoFocus?: 
         aria-label="Search all tools"
       />
       {query && (
-        <div className="tp-search-results" role="listbox">
+        <div className="tp-search-results" aria-live="polite">
           {results.length ? (
             results.map((tool) => (
-              <Link key={tool.id} to={`/${tool.slug}`} onClick={onSelect} role="option">
+              <Link key={tool.id} to={`/${tool.slug}`} onClick={onSelect}>
                 <span className="tp-tool-mini">
                   <ToolIcon name={tool.icon} />
                   <span>

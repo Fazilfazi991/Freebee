@@ -12,10 +12,20 @@ export type AnalyticsEvent =
 
 export type AnalyticsProperties = Record<string, string | number | boolean | undefined>;
 
+const allowedProperties = new Set([
+  'toolSlug',
+  'category',
+  'status',
+  'processingLocation',
+  'errorCode',
+  'fileSizeBucket',
+]);
+
 export function track(event: AnalyticsEvent, properties: AnalyticsProperties = {}) {
   if (typeof window === 'undefined') {
     return;
   }
 
-  window.dispatchEvent(new CustomEvent('tool-platform:analytics', { detail: { event, properties } }));
+  const safeProperties = Object.fromEntries(Object.entries(properties).filter(([key]) => allowedProperties.has(key)));
+  window.dispatchEvent(new CustomEvent('tool-platform:analytics', { detail: { event, properties: safeProperties } }));
 }

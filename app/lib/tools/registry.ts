@@ -224,7 +224,7 @@ export const tools: ToolDefinition[] = [
     description: 'Resize images precisely while preserving aspect ratio.',
     category: 'image',
     icon: 'Scaling',
-    keywords: ['image', 'resize', 'dimensions', 'pixels'],
+    keywords: ['image', 'photo', 'resize', 'dimensions', 'pixels'],
     featured: true,
     requiresAuth: false,
     premium: false,
@@ -648,7 +648,21 @@ export const searchTools = (query: string) => {
     return tools;
   }
 
-  return tools.filter((tool) =>
-    [tool.name, tool.description, tool.category, ...tool.keywords].join(' ').toLowerCase().includes(normalized),
-  );
+  const tokens = normalized.split(/\s+/u);
+
+  return tools
+    .filter((tool) => tool.engine === 'browser')
+    .map((tool) => {
+      const name = tool.name.toLowerCase();
+      const keywords = tool.keywords.join(' ').toLowerCase();
+      const searchable = `${name} ${tool.description} ${tool.category} ${keywords}`.toLowerCase();
+      const score =
+        (name === normalized ? 100 : name.includes(normalized) ? 50 : 0) +
+        tokens.reduce((total, token) => total + (name.includes(token) ? 10 : keywords.includes(token) ? 5 : 1), 0);
+
+      return { tool, searchable, score };
+    })
+    .filter(({ searchable }) => tokens.every((token) => searchable.includes(token)))
+    .sort((a, b) => b.score - a.score)
+    .map(({ tool }) => tool);
 };

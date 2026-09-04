@@ -32,7 +32,12 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
           <NavLink to="/builder">Website builder</NavLink>
         </nav>
         <div className="tp-header-actions">
-          <button className="tp-icon-button" onClick={() => setSearchOpen((v) => !v)} aria-label="Search tools">
+          <button
+            className="tp-icon-button"
+            onClick={() => setSearchOpen((v) => !v)}
+            aria-label="Search tools"
+            aria-expanded={searchOpen}
+          >
             <Search size={19} />
           </button>
           <button className="tp-text-button" disabled title="Authentication is coming later">
@@ -68,6 +73,9 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
           <Link to="/image">Images</Link>
           <Link to="/developer">Developer</Link>
           <Link to="/builder">Website builder</Link>
+          <Link to="/privacy">Privacy</Link>
+          <Link to="/terms">Terms</Link>
+          <Link to="/cookies">Cookies</Link>
         </div>
         <p className="tp-fine">
           © {new Date().getFullYear()} {platformConfig.company}. Temporary brand configuration.

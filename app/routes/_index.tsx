@@ -15,16 +15,26 @@ export const meta: MetaFunction = () => [
   { property: 'og:title', content: platformConfig.name },
   { property: 'og:description', content: platformConfig.description },
   { name: 'twitter:card', content: 'summary_large_image' },
+  { tagName: 'link', rel: 'canonical', href: platformConfig.url },
 ];
 
 export default function PlatformHome() {
-  const featured = tools.filter((tool) => tool.featured).slice(0, 10);
+  const featured = tools.filter((tool) => tool.featured && tool.engine === 'browser').slice(0, 10);
+  const websiteSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: platformConfig.name,
+    url: platformConfig.url,
+    description: platformConfig.description,
+  };
+
   return (
     <PlatformLayout>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }} />
       <section className="tp-hero">
         <div className="tp-hero-copy">
           <h1>Everything you need, in one browser.</h1>
-          <p>Convert, compress, create, edit, and use AI tools from a single, considered workspace.</p>
+          <p>Convert, compress, inspect, and create with focused tools that run in your browser.</p>
           <GlobalToolSearch />
           <div className="tp-popular">
             <span>Popular:</span>
@@ -56,7 +66,8 @@ export default function PlatformHome() {
             </div>
           </div>
           <p>
-            <Check size={17} /> Two tools work today. The rest are honest previews.
+            <Check size={17} /> {tools.filter((tool) => tool.engine !== 'planned').length} working tools with clear
+            processing boundaries.
           </p>
         </div>
       </section>

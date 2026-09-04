@@ -10,13 +10,13 @@ export function CsvTool({ mode }: { mode: 'csv-to-json' | 'json-to-csv' }) {
   const [warnings, setWarnings] = useState<string[]>([]);
   const [header, setHeader] = useState(true);
   const [delimiter, setDelimiter] = useState(mode === 'csv-to-json' ? '' : ',');
-  const process = () => {
+  const process = async () => {
     setError('');
     setWarnings([]);
 
     try {
       if (mode === 'csv-to-json') {
-        const result = csvToJson(input, header, delimiter);
+        const result = await csvToJson(input, header, delimiter);
         setOutput(JSON.stringify(result.rows, null, 2));
         setWarnings(result.warnings);
 
@@ -24,7 +24,7 @@ export function CsvTool({ mode }: { mode: 'csv-to-json' | 'json-to-csv' }) {
           setDelimiter(result.delimiter);
         }
       } else {
-        setOutput(jsonToCsv(input, delimiter));
+        setOutput(await jsonToCsv(input, delimiter));
       }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Conversion failed.');
@@ -68,7 +68,7 @@ export function CsvTool({ mode }: { mode: 'csv-to-json' | 'json-to-csv' }) {
           contains headers
         </label>
       )}
-      <button className="tp-primary" onClick={process}>
+      <button className="tp-primary" onClick={() => void process()}>
         Convert
       </button>
       {error && (

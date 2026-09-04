@@ -1,5 +1,24 @@
 # Tools implementation and verification status
 
+This file is the launch source of truth. Snapshot: 4 September 2026. “Browser” means local client-side processing; working routes are sitemap-eligible and show a local-processing disclosure. Browser/mobile status below is deliberately conservative.
+
+## Complete public inventory
+
+| Tools | Category | Engine / dependency | Status | Mobile / browser | Sitemap | Limitations |
+| --- | --- | --- | --- | --- | --- | --- |
+| Merge PDF, JPG to PDF, Split PDF, Rotate PDF, Remove/Extract PDF Pages, Add Page Numbers | PDF | Browser / pdf-lib 1.17.1 (MIT) | Working | Responsive / Chromium verified | Yes | 25 MB/file, 20 files, 100 MB/session |
+| Organize PDF, PDF to JPG, PDF to PNG | PDF | Browser / PDF.js 5.7.284 (Apache-2.0) + pdf-lib where edited | Working | Responsive / Chromium verified | Yes | Browser memory; large documents slower |
+| Compress Image, Resize Image, JPG/PNG/WebP converters | Image | Browser / Canvas + JSZip where batched | Working | Responsive / Chromium verified | Yes | 40 MP image guard; browser codec support |
+| Image to Text | Image | Browser / Tesseract.js 7.0.0 (Apache-2.0) | Working | Responsive / Chromium verified | Yes | OCR accuracy and memory vary |
+| Media Info | Video | Browser / Mediabunny 1.55.6 (MPL-2.0) | Working | Responsive / Chromium verified | Yes | Inspection only; format/browser dependent |
+| QR Generator | Business | Browser / react-qrcode-logo 3.x (MIT) | Working | Responsive / Chromium verified | Yes | User must verify encoded content |
+| Password Generator, Invoice Generator, Quotation Generator, Signature Generator | Business | Browser / Web Crypto, Canvas, pdf-lib | Working | Responsive / Chromium verified | Yes | Signature image is not identity verification; logos 2 MB/4096px |
+| JSON Formatter, Base64 Encoder/Decoder, URL Encoder/Decoder, JWT Decoder, Hash Generator, Timestamp Converter, Word/Character Counter, Text Case Converter, JSON Validator, UUID Generator | Developer | Browser / native APIs | Working | Responsive / Chromium verified | Yes | JWT decode does not verify signatures; browser memory applies |
+| CSV to JSON, JSON to CSV | Developer | Browser / Papa Parse 5.7.0 (MIT) | Working | Responsive / Chromium verified | Yes | Flat JSON objects only; formula-leading cells escaped on export |
+| Compress PDF, MP4 to MP3, Remove Background, AI Image Generator | Mixed | Planned | Not working | Not verified | No | Intentionally excluded from launch |
+
+Every working row uses the visible per-tool privacy disclosure. No tool payload, filename, token, hash, password, customer field, CSV cell, or OCR result is permitted by the analytics allowlist. Exact browser claims are maintained in `BROWSER_COMPATIBILITY.md`; current centralized limits are in `app/lib/tools/limits.ts`.
+
 Deterministic fixtures live in `test-fixtures/tools`. “Automated” records engine/unit validation; browser interaction results are recorded only after a real download and reset flow completes.
 
 | Tool | Route | Route load | Input works | Processing works | Output valid | Download works | Reset works | Console clean | Mobile checked | Status |

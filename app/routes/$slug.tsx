@@ -35,12 +35,26 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { name: 'twitter:card', content: 'summary' },
+    ...(data?.tool?.engine === 'planned' ? [{ name: 'robots', content: 'noindex, nofollow' }] : []),
   ];
 };
 export default function SlugRoute() {
   const { tool, category } = useLoaderData<typeof loader>();
+  const schema = tool
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: tool.name,
+        description: tool.description,
+        url: `${platformConfig.url}/${tool.slug}`,
+        applicationCategory: tool.category,
+        operatingSystem: 'Any modern web browser',
+      }
+    : undefined;
+
   return (
     <PlatformLayout>
+      {schema && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }} />}
       {tool ? <ToolShell tool={tool} /> : category ? <CategoryPage category={category} /> : null}
     </PlatformLayout>
   );

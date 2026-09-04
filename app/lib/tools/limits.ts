@@ -3,6 +3,8 @@ export const browserToolLimits = {
   maxFileBytes: 25 * 1024 * 1024,
   maxSessionBytes: 100 * 1024 * 1024,
   maxImagePixels: 40_000_000,
+  maxLogoBytes: 2 * 1024 * 1024,
+  maxLogoDimension: 4096,
 } as const;
 
 export function validateFiles(files: File[]) {

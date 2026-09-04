@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tools } from './registry';
+import { searchTools, tools } from './registry';
 describe('tool registry', () => {
   it('has unique slugs', () => expect(new Set(tools.map((tool) => tool.slug)).size).toBe(tools.length));
   it('marks implemented browser tools ready', () => {
@@ -44,5 +44,31 @@ describe('tool registry', () => {
       'signature-generator',
     ];
     expected.forEach((slug) => expect(tools.find((tool) => tool.slug === slug)?.engine).toBe('browser'));
+  });
+  it('finds useful working tools for realistic launch queries', () => {
+    const queries: Record<string, string> = {
+      pdf: 'merge-pdf',
+      merge: 'merge-pdf',
+      'jpg pdf': 'jpg-to-pdf',
+      'compress image': 'compress-image',
+      'resize photo': 'resize-image',
+      ocr: 'image-to-text',
+      'image text': 'image-to-text',
+      qr: 'qr-generator',
+      invoice: 'invoice-generator',
+      quote: 'quotation-generator',
+      signature: 'signature-generator',
+      json: 'json-formatter',
+      csv: 'csv-to-json',
+      jwt: 'jwt-decoder',
+      uuid: 'uuid-generator',
+      password: 'password-generator',
+      hash: 'hash-generator',
+      timestamp: 'timestamp-converter',
+      'video info': 'media-info',
+    };
+
+    Object.entries(queries).forEach(([query, slug]) => expect(searchTools(query)[0]?.slug).toBe(slug));
+    expect(searchTools('mp4 mp3')).toEqual([]);
   });
 });

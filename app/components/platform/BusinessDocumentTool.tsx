@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Download, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { downloadBlob } from '~/lib/tools/download';
+import { browserToolLimits } from '~/lib/tools/limits';
 import {
   calculateTotals,
   documentFilename,
@@ -108,13 +109,14 @@ export function BusinessDocumentTool({ type }: { type: 'invoice' | 'quotation' }
                 return;
               }
 
-              if (logo.size > 2 * 1024 * 1024) {
+              if (logo.size > browserToolLimits.maxLogoBytes) {
                 setLogoError('Choose a logo smaller than 2 MB.');
                 return;
               }
 
               const bitmap = await createImageBitmap(logo);
-              const tooLarge = bitmap.width > 4096 || bitmap.height > 4096;
+              const tooLarge =
+                bitmap.width > browserToolLimits.maxLogoDimension || bitmap.height > browserToolLimits.maxLogoDimension;
               bitmap.close();
               setLogoError(tooLarge ? 'Choose a logo no larger than 4096 × 4096 pixels.' : '');
 
@@ -199,13 +201,22 @@ export function BusinessDocumentTool({ type }: { type: 'invoice' | 'quotation' }
               </label>
             ))}
             <div className="tp-engine-actions">
-              <button disabled={index === 0} onClick={() => move(index, -1)}>
+              <button
+                aria-label={`Move ${item.description || 'item'} up`}
+                disabled={index === 0}
+                onClick={() => move(index, -1)}
+              >
                 <ArrowUp />
               </button>
-              <button disabled={index === doc.items.length - 1} onClick={() => move(index, 1)}>
+              <button
+                aria-label={`Move ${item.description || 'item'} down`}
+                disabled={index === doc.items.length - 1}
+                onClick={() => move(index, 1)}
+              >
                 <ArrowDown />
               </button>
               <button
+                aria-label={`Remove ${item.description || 'item'}`}
                 disabled={doc.items.length === 1}
                 onClick={() => setDoc({ ...doc, items: doc.items.filter((row) => row.id !== item.id) })}
               >

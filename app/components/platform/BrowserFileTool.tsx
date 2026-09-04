@@ -102,9 +102,8 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
     setFiles(accepted);
     setPhase(accepted.length ? 'ready' : 'idle');
     track('tool_upload', {
-      tool: tool.slug,
-      count: accepted.length,
-      totalBytes: accepted.reduce((sum, file) => sum + file.size, 0),
+      toolSlug: tool.slug,
+      processingLocation: 'browser',
     });
 
     if ((tool.slug === 'split-pdf' || tool.slug === 'organize-pdf') && accepted[0]) {
@@ -159,7 +158,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
 
     setPhase('processing');
     setError('');
-    track('tool_process_started', { tool: tool.slug, count: files.length });
+    track('tool_process_started', { toolSlug: tool.slug, processingLocation: 'browser' });
 
     try {
       if (tool.slug === 'jpg-to-pdf') {
@@ -213,11 +212,11 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
       }
 
       setPhase('success');
-      track('tool_process_completed', { tool: tool.slug });
+      track('tool_process_completed', { toolSlug: tool.slug, status: 'completed' });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Processing failed. Try another file.');
       setPhase('error');
-      track('tool_error', { tool: tool.slug });
+      track('tool_error', { toolSlug: tool.slug, errorCode: 'processing_failed' });
     }
   };
   const filename = () =>
@@ -243,6 +242,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
         className="tp-hidden-input"
         ref={input}
         type="file"
+        aria-label={`Choose files for ${tool.name}`}
         accept={tool.accept}
         multiple={isPdfList || isImagePdf || isBatchImage}
         onChange={(event) => choose(Array.from(event.target.files || []))}
@@ -487,7 +487,7 @@ export function BrowserFileTool({ tool }: { tool: ToolDefinition }) {
                 className="tp-download"
                 onClick={() => {
                   downloadBlob(result, filename());
-                  track('tool_download', { tool: tool.slug, bytes: result.size });
+                  track('tool_download', { toolSlug: tool.slug });
                 }}
               >
                 <Download size={18} />

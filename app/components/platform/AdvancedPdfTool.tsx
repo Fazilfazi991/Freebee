@@ -109,6 +109,7 @@ export function AdvancedPdfTool({ tool }: { tool: ToolDefinition }) {
         ref={input}
         className="tp-hidden-input"
         type="file"
+        aria-label={`Choose a PDF for ${tool.name}`}
         accept=".pdf,application/pdf"
         onChange={(event) => void choose(event.target.files?.[0])}
       />

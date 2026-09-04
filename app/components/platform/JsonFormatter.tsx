@@ -12,11 +12,11 @@ export function JsonFormatter() {
       const parsed = JSON.parse(value);
       setValue(JSON.stringify(parsed, null, minify ? 0 : 2));
       setError('');
-      track('tool_process_completed', { tool: 'json-formatter', action: minify ? 'minify' : 'format' });
+      track('tool_process_completed', { toolSlug: 'json-formatter', processingLocation: 'browser' });
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Invalid JSON';
       setError(message);
-      track('tool_error', { tool: 'json-formatter' });
+      track('tool_error', { toolSlug: 'json-formatter', errorCode: 'invalid_json' });
     }
   };
   const download = () => {
@@ -27,7 +27,7 @@ export function JsonFormatter() {
     a.download = 'formatted.json';
     a.click();
     URL.revokeObjectURL(url);
-    track('tool_download', { tool: 'json-formatter' });
+    track('tool_download', { toolSlug: 'json-formatter' });
   };
 
   return (
