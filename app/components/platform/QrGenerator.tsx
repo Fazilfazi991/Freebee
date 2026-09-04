@@ -2,9 +2,10 @@ import { useRef, useState } from 'react';
 import { QRCode } from 'react-qrcode-logo';
 import { Download, RotateCcw } from 'lucide-react';
 import { track } from '~/lib/analytics';
+import { platformConfig } from '~/config/platform';
 
 export function QrGenerator() {
-  const [value, setValue] = useState('https://example.com');
+  const [value, setValue] = useState(platformConfig.url);
   const ref = useRef<HTMLDivElement>(null);
   const download = () => {
     const canvas = ref.current?.querySelector('canvas');
@@ -34,7 +35,7 @@ export function QrGenerator() {
           <Download size={18} />
           Download PNG
         </button>
-        <button onClick={() => setValue('https://example.com')}>
+        <button onClick={() => setValue(platformConfig.url)}>
           <RotateCcw size={18} />
           Reset
         </button>

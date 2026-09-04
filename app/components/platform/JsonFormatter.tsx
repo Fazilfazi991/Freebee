@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Copy, Download, Minimize2, RotateCcw, Wand2 } from 'lucide-react';
 import { track } from '~/lib/analytics';
+import { platformConfig } from '~/config/platform';
 
-const sample = '{\n  "project": "Tool Platform",\n  "ready": true\n}';
+const sample = JSON.stringify({ project: platformConfig.name, ready: true }, null, 2);
 
 export function JsonFormatter() {
   const [value, setValue] = useState(sample);

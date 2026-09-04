@@ -1,20 +1,23 @@
-# Public beta launch readiness
+# Release candidate launch readiness
 
-## READY
+## PASS
 
 - 38 browser-local public tools; four planned tools excluded from the sitemap.
-- TypeScript, lint and 94 automated tests pass.
+- TypeScript, lint and 96 automated tests pass.
+- Development-mode audit totals: 56 public/direct routes crawled without HTTP failures and 51 sitemap URLs.
 - Canonicals, descriptions, robots, sitemap, WebSite/WebApplication structured data and internal related-tool links exist.
 - Provider-neutral analytics now drops all fields except a small operational allowlist.
 - Privacy, terms and cookie drafts exist without invented company details.
 - Responsive safeguards cover overflow, long tokens, 16px mobile inputs, 44px touch targets and reduced motion.
 
-## NEEDS TESTING
+## CONDITIONAL PASS
 
-- Physical iOS/Android and emulated 320/360/390/430 viewport matrix.
+- Physical iOS/Android testing; the emulated 320/360/390/430 representative matrix passed in Chrome development mode.
 - Chrome, Edge, Firefox and Safari release builds, including downloads and heavy-engine fixtures.
 - Lighthouse on a Linux production artifact and manual screen-reader/keyboard pass.
 - Long real-world invoice/quotation content and printer output.
+- Chrome development-mode keyboard pass reached skip link, navigation, search, breadcrumbs and invoice fields in logical order with visible focus and no trap. A screen-reader pass is still required.
+- Automated PDF validation covers normal and 45-line multipage documents. Physical A4 print preview, long-address and logo print sign-off remain outstanding.
 
 ## Performance budgets
 
@@ -25,11 +28,14 @@
 
 Static import review confirmed pdf-lib, PDF.js, Tesseract and Mediabunny are dynamically loaded. Papa Parse was changed to a dynamic import during this audit. Development-mode transfer sizes are not release measurements; Lighthouse and bundle sizes remain a Linux production-artifact gate.
 
-## BLOCKING
+## BLOCKED
 
 - Final product name, legal entity/contact, production domain and legal approval are unset.
 - A production build has not yet succeeded on a supported Linux release runner. Windows Miniflare crashes natively.
 - Cross-browser and real-mobile release matrices remain incomplete.
+- Legacy `VITE_*_ACCESS_TOKEN` builder variables must remain unset in production because Vite-prefixed values are public.
+- Production dependency audit reports 85 advisories (1 critical, 38 high, 30 moderate, 16 low). Critical/high paths include fast-xml-parser through AWS Bedrock, Remix/React Router XSS advisories, the MCP SDK, Rollup, jsondiffpatch and inherited desktop/build dependencies. Remediation requires a separately verified dependency stabilization pass; major upgrades were intentionally not applied blindly.
+- `package.json` retains the inherited `1.0.0` version. No beta identifier was invented; release versioning must be chosen with the final release process.
 
 ## POST-LAUNCH
 
@@ -39,4 +45,4 @@ Static import review confirmed pdf-lib, PDF.js, Tesseract and Mediabunny are dyn
 
 ## Go / no-go
 
-**No-go for unrestricted production launch.** Suitable for an internal or tightly controlled beta after a Linux artifact is built. Public beta requires the three blocking groups above to close.
+**BLOCKED.** A controlled public beta is not approved until a Linux artifact builds and runs, critical browser/device checks pass or are explicitly accepted, and the final brand/domain/legal approvals are complete.

@@ -1,11 +1,10 @@
 import { platformConfig } from '~/config/platform';
 
 export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
-  const contact = platformConfig.email.includes('example.com')
-    ? '[CONTACT EMAIL — TO BE CONFIRMED]'
-    : platformConfig.email;
-  const owner =
-    platformConfig.company === 'Tool Platform' ? '[LEGAL ENTITY — TO BE CONFIRMED]' : platformConfig.company;
+  const contact = platformConfig.legal.privacyEmail || '[PRIVACY CONTACT — TO BE CONFIRMED]';
+  const cookieContact = platformConfig.legal.cookieEmail || '[COOKIE CONTACT — TO BE CONFIRMED]';
+  const owner = platformConfig.legal.entity || '[LEGAL ENTITY — TO BE CONFIRMED]';
+  const effectiveDate = platformConfig.legal.effectiveDate || '[EFFECTIVE DATE — TO BE CONFIRMED]';
 
   if (kind === 'privacy') {
     return (
@@ -15,6 +14,7 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
           <strong>Draft for legal review.</strong> This page describes the current public-beta architecture; it is not
           legal advice.
         </p>
+        <p>Effective date: {effectiveDate}</p>
         <h2>Local processing</h2>
         <p>
           Public file and utility tools marked “Works in your browser” process their inputs in the browser. Their file
@@ -62,6 +62,7 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
           Before analytics or advertising is enabled, consent requirements must be reviewed for the launch jurisdictions
           and this notice updated.
         </p>
+        <p>Contact: {cookieContact}</p>
       </article>
     );
   }
@@ -93,7 +94,13 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
         <br />
         Contact: {contact}
         <br />
-        Governing law: [JURISDICTION — TO BE CONFIRMED]
+        Registered address: {platformConfig.legal.registeredAddress || '[REGISTERED ADDRESS — TO BE CONFIRMED]'}
+        <br />
+        Jurisdiction: {platformConfig.legal.jurisdiction || '[JURISDICTION — TO BE CONFIRMED]'}
+        <br />
+        Governing law: {platformConfig.legal.governingLaw || '[GOVERNING LAW — TO BE CONFIRMED]'}
+        <br />
+        Effective date: {effectiveDate}
       </p>
     </article>
   );

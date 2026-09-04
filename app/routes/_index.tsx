@@ -10,7 +10,7 @@ import { categories, tools } from '~/lib/tools/registry';
 
 export const links: LinksFunction = platformLinks;
 export const meta: MetaFunction = () => [
-  { title: `${platformConfig.name} — Useful tools, one calm workspace` },
+  { title: `${platformConfig.name} — ${platformConfig.tagline}` },
   { name: 'description', content: platformConfig.description },
   { property: 'og:title', content: platformConfig.name },
   { property: 'og:description', content: platformConfig.description },

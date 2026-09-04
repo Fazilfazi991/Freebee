@@ -1126,6 +1126,15 @@ body {
   outline-offset: 3px;
 }
 
+.tp-beta {
+  padding: 2px 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
 @media (max-width: 700px) {
   .tp-line-items article {
     grid-template-columns: 1fr 1fr;

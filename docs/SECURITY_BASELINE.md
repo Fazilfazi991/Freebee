@@ -1,5 +1,11 @@
 # Security baseline
 
+## Release-candidate audit — 4 September 2026
+
+`pnpm audit --prod --audit-level high` failed with 85 advisories: 1 critical, 38 high, 30 moderate and 16 low. The critical path is `fast-xml-parser@5.2.5` through the AWS Bedrock SDK. High findings include Remix/React Router XSS advisories, `@modelcontextprotocol/sdk`, Rollup, `jsondiffpatch`, `fast-uri`, `nanoid` and `immutable` paths. This blocks release approval.
+
+No broad or major-version update was attempted during stabilization. Remediation must identify production-reachable paths, update coherent dependency families together, re-run the full builder and public-tool regression suite, repeat the audit, and document any accepted residual risk.
+
 Audit date: 2026-09-04. Command: `pnpm audit --json` with pnpm 9.14.4 and the committed lockfile. This is a triage baseline, not a statement that vulnerable code is exploitable in every deployment.
 
 ## Summary

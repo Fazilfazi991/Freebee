@@ -16,6 +16,7 @@ import globalStyles from './styles/index.scss?url';
 import xtermStyles from '@xterm/xterm/css/xterm.css?url';
 
 import 'virtual:uno.css';
+import { platformConfig } from './config/platform';
 
 const toastAnimation = cssTransition({
   enter: 'animated fadeInRight',
@@ -25,7 +26,7 @@ const toastAnimation = cssTransition({
 export const links: LinksFunction = () => [
   {
     rel: 'icon',
-    href: '/favicon.svg',
+    href: platformConfig.favicon,
     type: 'image/svg+xml',
   },
   { rel: 'stylesheet', href: reactToastifyStyles },

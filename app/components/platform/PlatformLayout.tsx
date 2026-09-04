@@ -21,6 +21,7 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
         <Link to="/" className="tp-brand" aria-label={`${platformConfig.name} home`}>
           <span className="tp-mark">{platformConfig.shortName}</span>
           <span>{platformConfig.name}</span>
+          {platformConfig.beta && <small className="tp-beta">Beta</small>}
         </Link>
         <nav className={`tp-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">
           <NavLink to="/tools">Tools</NavLink>
@@ -76,6 +77,7 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/cookies">Cookies</Link>
+          {platformConfig.feedbackUrl && <a href={platformConfig.feedbackUrl}>Send feedback</a>}
         </div>
         <p className="tp-fine">
           © {new Date().getFullYear()} {platformConfig.company}. Temporary brand configuration.
