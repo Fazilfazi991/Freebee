@@ -27,6 +27,13 @@ export function getApiKeysFromCookie(cookieHeader: string | null): Record<string
   return cookies.apiKeys ? JSON.parse(cookies.apiKeys) : {};
 }
 
+export async function getApiKeysForRequest(request: Request): Promise<Record<string, string>> {
+  const cookieKeys = getApiKeysFromCookie(request.headers.get('Cookie'));
+  const { getServerManagedApiKeys } = await import('~/lib/.server/secrets');
+
+  return { ...cookieKeys, ...(await getServerManagedApiKeys(request)) };
+}
+
 export function getProviderSettingsFromCookie(cookieHeader: string | null): Record<string, any> {
   const cookies = parseCookies(cookieHeader);
   return cookies.providers ? JSON.parse(cookies.providers) : {};

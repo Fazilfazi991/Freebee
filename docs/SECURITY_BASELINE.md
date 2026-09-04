@@ -39,3 +39,9 @@ Moderate and low findings are primarily nested parser, glob, development-server,
 3. Lockfile-only upgrades first; then coordinated Remix/Vite/AI SDK/Electron majors with characterization tests.
 4. Dependency licenses and notices are generated from the exact production graph and reviewed by counsel.
 5. Secrets leave browser storage, arbitrary egress is controlled, generated shell actions run in isolated disposable sandboxes, and deployment endpoints enforce authentication/tenant authorization.
+
+## Phase 1B update
+
+The Remix family was raised to 2.17.2, jsPDF to 4.2.1, and Vitest to 3.2.6, addressing four of the seven critical advisory entries above. The remaining critical findings are transitive `fast-xml-parser`, `shell-quote`, and `tar` paths. They remain release blockers pending compatible parent-package upgrades; no cross-major transitive override is treated as proven safe.
+
+OpenAI is the first credential moved behind a server-only store contract. The current in-memory implementation is a development seam only, not production custody. Five legacy `VITE_*_ACCESS_TOKEN` variables are now rejected by the CI credential guard. GitHub, GitLab, Vercel, Netlify, Supabase management, and other provider credentials still require endpoint-by-endpoint migration.

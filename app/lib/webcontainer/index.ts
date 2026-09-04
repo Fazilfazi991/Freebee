@@ -1,6 +1,7 @@
 import { WebContainer } from '@webcontainer/api';
 import { WORK_DIR_NAME } from '~/utils/constants';
 import { cleanStackTrace } from '~/utils/stacktrace';
+import { WebContainerExecutionEnvironment } from '~/lib/execution/webcontainer-execution-environment';
 
 interface WebContainerContext {
   loaded: boolean;
@@ -16,6 +17,10 @@ if (import.meta.hot) {
 
 export let webcontainer: Promise<WebContainer> = new Promise(() => {
   // noop for ssr
+});
+
+export let executionEnvironment: Promise<WebContainerExecutionEnvironment> = new Promise(() => {
+  // noop for SSR
 });
 
 if (!import.meta.env.SSR) {
@@ -62,4 +67,6 @@ if (!import.meta.env.SSR) {
   if (import.meta.hot) {
     import.meta.hot.data.webcontainer = webcontainer;
   }
+
+  executionEnvironment = webcontainer.then((container) => new WebContainerExecutionEnvironment(container));
 }

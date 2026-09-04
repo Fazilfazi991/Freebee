@@ -39,6 +39,19 @@ export const APIKeyManager: React.FC<APIKeyManagerProps> = ({ provider, apiKey, 
 
   // Reset states and load saved key when provider changes
   useEffect(() => {
+    if (provider.name === 'OpenAI') {
+      fetch('/api/secrets/openai')
+        .then((response) => response.json())
+        .then((result) => {
+          const { exists } = result as { exists: boolean };
+          setTempKey('');
+          setApiKey(exists ? '__server_managed__' : '');
+          setIsEditing(false);
+        })
+        .catch(() => setApiKey(''));
+      return;
+    }
+
     // Load saved API key from cookies for this provider
     const savedKeys = getApiKeysFromCookies();
     const savedKey = savedKeys[provider.name] || '';
@@ -73,7 +86,28 @@ export const APIKeyManager: React.FC<APIKeyManagerProps> = ({ provider, apiKey, 
     checkEnvApiKey();
   }, [checkEnvApiKey]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (provider.name === 'OpenAI') {
+      const response = await fetch('/api/secrets/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: tempKey }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to store OpenAI API key');
+      }
+
+      const currentKeys = getApiKeysFromCookies();
+      delete currentKeys.OpenAI;
+      Cookies.set('apiKeys', JSON.stringify(currentKeys));
+      setApiKey('__server_managed__');
+      setTempKey('');
+      setIsEditing(false);
+
+      return;
+    }
+
     // Save to parent state
     setApiKey(tempKey);
 

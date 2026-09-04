@@ -33,19 +33,6 @@ export default defineConfig((config) => {
           protocolImports: true,
           exclude: ['child_process', 'fs', 'path'],
         }),
-      {
-        name: 'buffer-polyfill',
-        transform(code, id) {
-          if (id.includes('env.mjs')) {
-            return {
-              code: `import { Buffer } from 'buffer';\n${code}`,
-              map: null,
-            };
-          }
-
-          return null;
-        },
-      },
       config.mode !== 'test' && !localNodeDev && remixCloudflareDevProxy(),
       remixVitePlugin({
         future: {

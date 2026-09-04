@@ -2,7 +2,7 @@ import { type ActionFunctionArgs } from '@remix-run/cloudflare';
 import { streamText } from '~/lib/.server/llm/stream-text';
 import { stripIndents } from '~/utils/stripIndent';
 import type { ProviderInfo } from '~/types/model';
-import { getApiKeysFromCookie, getProviderSettingsFromCookie } from '~/lib/api/cookies';
+import { getApiKeysForRequest, getProviderSettingsFromCookie } from '~/lib/api/cookies';
 import { createScopedLogger } from '~/utils/logger';
 
 export async function action(args: ActionFunctionArgs) {
@@ -37,7 +37,7 @@ async function enhancerAction({ context, request }: ActionFunctionArgs) {
   }
 
   const cookieHeader = request.headers.get('Cookie');
-  const apiKeys = getApiKeysFromCookie(cookieHeader);
+  const apiKeys = await getApiKeysForRequest(request);
   const providerSettings = getProviderSettingsFromCookie(cookieHeader);
 
   try {

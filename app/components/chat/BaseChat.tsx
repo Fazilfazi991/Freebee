@@ -232,7 +232,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const onApiKeysChange = async (providerName: string, apiKey: string) => {
       const newApiKeys = { ...apiKeys, [providerName]: apiKey };
       setApiKeys(newApiKeys);
-      Cookies.set('apiKeys', JSON.stringify(newApiKeys));
+
+      const browserKeys = { ...newApiKeys };
+
+      if (providerName === 'OpenAI') {
+        delete browserKeys.OpenAI;
+      }
+
+      Cookies.set('apiKeys', JSON.stringify(browserKeys));
 
       setIsModelLoading(providerName);
 

@@ -1,48 +1,36 @@
 # Execution abstraction boundary
 
-## Purpose
+## Phase 1B result
 
-Today, generated projects execute in a browser-side StackBlitz WebContainer. A commercial product needs an execution contract that can retain WebContainers for local/instant previews while allowing E2B or another remote isolated sandbox without leaking vendor APIs into chat, persistence, or UI code.
+Generated `<boltArtifact>` / `<boltAction>` output is still parsed exactly as before, but file and generated-command execution now crosses a provider-neutral boundary:
 
-## Current coupling
+- `app/lib/execution/types.ts` defines filesystem, process, command, preview, and change-event contracts.
+- `app/lib/execution/policy.ts` normalizes command metadata and rejects empty, oversized, null-byte, and workspace-escaping requests.
+- `app/lib/execution/execution-service.ts` is the policy/enforcement seam used by the action runner.
+- `app/lib/execution/webcontainer-execution-environment.ts` is the WebContainer adapter.
+- `app/lib/webcontainer/index.ts` remains the browser boot/composition root and injects the adapter into `WorkbenchStore`.
+- `app/lib/runtime/action-runner.ts` no longer imports `@webcontainer/api`; generated file and shell/start actions use the abstraction.
 
-`app/lib/webcontainer/index.ts` creates the singleton WebContainer. `workbench.ts`, `files.ts`, `terminal.ts`, `previews.ts`, `action-runner.ts`, import/export helpers, and preview/terminal components consume WebContainer types or events directly. Project state is therefore the running container filesystem rather than a durable, provider-neutral snapshot.
+The adapter binds generated commands to the existing persistent `BoltShell`, retaining command session and abort behavior. Its direct-spawn fallback exists for environments without that UI shell.
 
-## Proposed contract
+## Current contract
 
-```ts
-interface ExecutionEnvironment {
-  readonly id: string;
-  boot(options: BootOptions): Promise<void>;
-  mount(snapshot: ProjectSnapshot): Promise<void>;
-  readFile(path: ProjectPath): Promise<Uint8Array>;
-  writeFile(path: ProjectPath, contents: Uint8Array): Promise<void>;
-  remove(path: ProjectPath, options?: { recursive?: boolean }): Promise<void>;
-  list(path: ProjectPath): Promise<FileEntry[]>;
-  spawn(command: string, args: string[], options?: SpawnOptions): Promise<ProcessHandle>;
-  ports(): AsyncIterable<PortEvent>;
-  snapshot(): Promise<ProjectSnapshot>;
-  dispose(): Promise<void>;
-}
-```
+`ExecutionEnvironment` exposes workspace identity, read/write/create/delete/rename/list operations, normalized command execution, process spawning, preview events/URLs, and filesystem-change events. `ExecutionService` constrains paths to the project root, creates parent directories, rejects unknown action types, emits trace metadata, and propagates execution failures.
 
-Supporting interfaces should expose process stdout/stderr/exit separately, normalized port-ready events, cancellation, quotas, timeouts, and structured errors. Paths must be normalized and constrained to a workspace root. No adapter receives provider secrets it does not need.
+## Deliberately incomplete migration inventory
 
-## Adapters and ownership
+Direct WebContainer dependencies remain in the browser bootstrap/auth/connect route and in `files.ts`, `previews.ts`, `terminal.ts`, `useGit.ts`, `Search.tsx`, and `utils/shell.ts`. This is intentional incremental migration, not a claim that WebContainers have been removed. `ActionRunner` is the first high-risk generated-code path moved behind the boundary.
 
-- `WebContainerExecutionEnvironment`: wraps current `WebContainer.boot`, `fs`, `spawn`, and `server-ready` behavior.
-- `RemoteSandboxExecutionEnvironment`: maps the same contract to E2B or a future service, with server-owned credentials and signed preview URLs.
-- `ExecutionCoordinator`: owns lifecycle, health, cancellation, resource limits, snapshots, and adapter selection.
-- UI stores consume only the coordinator's provider-neutral events.
-- Durable `ProjectFile` records/snapshots are canonical; a sandbox is disposable derived state.
+## Remote sandbox compatibility
 
-## Migration sequence
+E2B or another remote sandbox can implement the contract, but replacement is not a package swap. A production adapter and coordinator must add:
 
-1. Add interfaces and an adapter around current WebContainer behavior without changing UI behavior.
-2. Remove direct WebContainer imports from stores/components, replacing them with the coordinator.
-3. Introduce durable snapshot hydration and write-through change events.
-4. Add a remote adapter behind a server-side feature flag.
-5. Add capability negotiation for network, processes, preview URLs, persistence, and sleep/resume.
-6. Validate identical artifact actions against both adapters before changing the default.
+1. server-owned sandbox provisioning and tenant authorization;
+2. durable project hydration and write-through snapshot synchronization;
+3. bidirectional terminal streaming and explicit cancellation/timeouts;
+4. signed preview URLs and port lifecycle routing;
+5. quotas, egress policy, audit logs, sleep/resume, and disposal;
+6. capability negotiation for platform differences;
+7. migration of the remaining direct WebContainer consumers to provider-neutral events.
 
-Remote replacement is feasible, but not a package swap. Preview URL routing, terminal streaming, file synchronization, lifecycle, auth, quotas, and secret custody all move from browser-local implicit behavior to explicit server-managed services.
+WebContainers remain appropriate for fast local previews. For a commercial multi-tenant service, a remote isolated sandbox should become the default execution trust boundary while the browser adapter can remain an optional local mode.

@@ -51,6 +51,9 @@ jobs:
       - name: Run tests
         run: pnpm run test
 
+      - name: Reject client-exposed platform credentials
+        run: node scripts/check-client-env.mjs
+
       - name: Run production build
         run: pnpm run build
 

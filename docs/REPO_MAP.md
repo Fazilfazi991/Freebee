@@ -86,6 +86,9 @@ Audited revision: `2e254ac19a696394030601bc602f54945b12bfc4`
 | Path | Responsibility |
 | --- | --- |
 | `app/lib/webcontainer/index.ts` | Exact WebContainer boot site, inspector installation, preview errors |
+| `app/lib/execution/types.ts` | Provider-neutral filesystem, process, command, preview, and event contracts |
+| `app/lib/execution/execution-service.ts` | Workspace/path policy and generated action execution boundary |
+| `app/lib/execution/webcontainer-execution-environment.ts` | WebContainer implementation of the execution contract |
 | `app/lib/stores/workbench.ts` | Central artifact/action queue and facade for editor/files/terminal/previews |
 | `app/lib/runtime/action-runner.ts` | Executes parsed file/shell/start/Supabase/deploy actions |
 | `app/lib/stores/files.ts` | WebContainer filesystem watch/read/write/delete and file state |
@@ -114,6 +117,8 @@ Audited revision: `2e254ac19a696394030601bc602f54945b12bfc4`
 | `app/lib/persistence/localStorage.ts` | Browser localStorage helpers |
 | `app/lib/services/importExportService.ts` | Import/export orchestration |
 | `app/lib/stores/settings.ts` | Provider and feature settings persisted locally |
+| `app/lib/.server/secrets/*` | Server-only secret-store contract and development in-memory adapter |
+| `app/routes/api.secrets.openai.ts` | OpenAI secret metadata/store/delete endpoint; never returns the raw value |
 
 ## Git and deployments
 

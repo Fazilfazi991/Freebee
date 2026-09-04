@@ -14,6 +14,7 @@ import { extractPropertiesFromMessage } from '~/lib/.server/llm/utils';
 import type { DesignScheme } from '~/types/design-scheme';
 import { MCPService } from '~/lib/services/mcpService';
 import { StreamRecoveryManager } from '~/lib/.server/llm/stream-recovery';
+import { getApiKeysForRequest } from '~/lib/api/cookies';
 
 export async function action(args: ActionFunctionArgs) {
   return chatAction(args);
@@ -68,7 +69,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
     }>();
 
   const cookieHeader = request.headers.get('Cookie');
-  const apiKeys = JSON.parse(parseCookies(cookieHeader || '').apiKeys || '{}');
+  const apiKeys = await getApiKeysForRequest(request);
   const providerSettings: Record<string, IProviderSetting> = JSON.parse(
     parseCookies(cookieHeader || '').providers || '{}',
   );

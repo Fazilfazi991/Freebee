@@ -1,4 +1,3 @@
-import type { WebContainer } from '@webcontainer/api';
 import { path as nodePath } from '~/utils/path';
 import { atom, map, type MapStore } from 'nanostores';
 import type { ActionAlert, BoltAction, DeployAlert, FileHistory, SupabaseAction, SupabaseAlert } from '~/types/actions';
@@ -6,6 +5,7 @@ import { createScopedLogger } from '~/utils/logger';
 import { unreachable } from '~/utils/unreachable';
 import type { ActionCallbackData } from './message-parser';
 import type { BoltShell } from '~/utils/shell';
+import { ExecutionService, type ExecutionEnvironment } from '~/lib/execution';
 
 const logger = createScopedLogger('ActionRunner');
 
@@ -64,7 +64,7 @@ class ActionCommandError extends Error {
 }
 
 export class ActionRunner {
-  #webcontainer: Promise<WebContainer>;
+  #environment: Promise<ExecutionEnvironment>;
   #currentExecutionPromise: Promise<void> = Promise.resolve();
   #shellTerminal: () => BoltShell;
   runnerId = atom<string>(`${Date.now()}`);
@@ -75,13 +75,13 @@ export class ActionRunner {
   buildOutput?: { path: string; exitCode: number; output: string };
 
   constructor(
-    webcontainerPromise: Promise<WebContainer>,
+    environmentPromise: Promise<ExecutionEnvironment>,
     getShellTerminal: () => BoltShell,
     onAlert?: (alert: ActionAlert) => void,
     onSupabaseAlert?: (alert: SupabaseAlert) => void,
     onDeployAlert?: (alert: DeployAlert) => void,
   ) {
-    this.#webcontainer = webcontainerPromise;
+    this.#environment = environmentPromise;
     this.#shellTerminal = getShellTerminal;
     this.onAlert = onAlert;
     this.onSupabaseAlert = onSupabaseAlert;
@@ -252,13 +252,6 @@ export class ActionRunner {
       unreachable('Expected shell action');
     }
 
-    const shell = this.#shellTerminal();
-    await shell.ready();
-
-    if (!shell || !shell.terminal || !shell.process) {
-      unreachable('Shell terminal not found');
-    }
-
     // Pre-validate command for common issues
     const validationResult = await this.#validateShellCommand(action.content);
 
@@ -267,14 +260,20 @@ export class ActionRunner {
       action.content = validationResult.modifiedCommand;
     }
 
-    const resp = await shell.executeCommand(this.runnerId.get(), action.content, () => {
-      logger.debug(`[${action.type}]:Aborting Action\n\n`, action);
-      action.abort();
+    const environment = await this.#environment;
+    const resp = await new ExecutionService(environment).runCommand({
+      command: action.content,
+      sourceId: this.runnerId.get(),
+      traceId: `${this.runnerId.get()}:${action.type}`,
+      onAbort: () => {
+        logger.debug(`[${action.type}]:Aborting Action\n\n`, action);
+        action.abort();
+      },
     });
     logger.debug(`${action.type} Shell Response: [exit code:${resp?.exitCode}]`);
 
-    if (resp?.exitCode != 0) {
-      const enhancedError = this.#createEnhancedShellError(action.content, resp?.exitCode, resp?.output);
+    if (resp.exitCode != 0) {
+      const enhancedError = this.#createEnhancedShellError(action.content, resp.exitCode, resp.output);
       throw new ActionCommandError(enhancedError.title, enhancedError.details);
     }
   }
@@ -284,25 +283,20 @@ export class ActionRunner {
       unreachable('Expected shell action');
     }
 
-    if (!this.#shellTerminal) {
-      unreachable('Shell terminal not found');
-    }
-
-    const shell = this.#shellTerminal();
-    await shell.ready();
-
-    if (!shell || !shell.terminal || !shell.process) {
-      unreachable('Shell terminal not found');
-    }
-
-    const resp = await shell.executeCommand(this.runnerId.get(), action.content, () => {
-      logger.debug(`[${action.type}]:Aborting Action\n\n`, action);
-      action.abort();
+    const environment = await this.#environment;
+    const resp = await new ExecutionService(environment).runCommand({
+      command: action.content,
+      sourceId: this.runnerId.get(),
+      traceId: `${this.runnerId.get()}:${action.type}`,
+      onAbort: () => {
+        logger.debug(`[${action.type}]:Aborting Action\n\n`, action);
+        action.abort();
+      },
     });
     logger.debug(`${action.type} Shell Response: [exit code:${resp?.exitCode}]`);
 
-    if (resp?.exitCode != 0) {
-      throw new ActionCommandError('Failed To Start Application', resp?.output || 'No Output Available');
+    if (resp.exitCode != 0) {
+      throw new ActionCommandError('Failed To Start Application', resp.output || 'No Output Available');
     }
 
     return resp;
@@ -313,29 +307,10 @@ export class ActionRunner {
       unreachable('Expected file action');
     }
 
-    const webcontainer = await this.#webcontainer;
-    const relativePath = nodePath.relative(webcontainer.workdir, action.filePath);
-
-    let folder = nodePath.dirname(relativePath);
-
-    // remove trailing slashes
-    folder = folder.replace(/\/+$/g, '');
-
-    if (folder !== '.') {
-      try {
-        await webcontainer.fs.mkdir(folder, { recursive: true });
-        logger.debug('Created folder', folder);
-      } catch (error) {
-        logger.error('Failed to create folder\n\n', error);
-      }
-    }
-
-    try {
-      await webcontainer.fs.writeFile(relativePath, action.content);
-      logger.debug(`File written ${relativePath}`);
-    } catch (error) {
-      logger.error('Failed to write file\n\n', error);
-    }
+    const environment = await this.#environment;
+    const execution = new ExecutionService(environment);
+    await execution.writeFile(action.filePath, action.content);
+    logger.debug(`File written ${action.filePath}`);
   }
 
   #updateAction(id: string, newState: ActionStateUpdate) {
@@ -346,9 +321,9 @@ export class ActionRunner {
 
   async getFileHistory(filePath: string): Promise<FileHistory | null> {
     try {
-      const webcontainer = await this.#webcontainer;
+      const environment = await this.#environment;
       const historyPath = this.#getHistoryPath(filePath);
-      const content = await webcontainer.fs.readFile(historyPath, 'utf-8');
+      const content = await environment.readFile(historyPath, 'utf-8');
 
       return JSON.parse(content);
     } catch (error) {
@@ -389,10 +364,10 @@ export class ActionRunner {
       source: 'netlify',
     });
 
-    const webcontainer = await this.#webcontainer;
+    const environment = await this.#environment;
 
     // Create a new terminal specifically for the build
-    const buildProcess = await webcontainer.spawn('npm', ['run', 'build']);
+    const buildProcess = await environment.spawnProcess('npm', ['run', 'build']);
 
     let output = '';
     const outputPromise = buildProcess.output.pipeTo(
@@ -450,10 +425,10 @@ export class ActionRunner {
 
     // Try to find the first existing build directory
     for (const dir of commonBuildDirs) {
-      const dirPath = nodePath.join(webcontainer.workdir, dir);
+      const dirPath = nodePath.join(environment.workdir, dir);
 
       try {
-        await webcontainer.fs.readdir(dirPath);
+        await environment.listFiles(dirPath);
         buildDir = dirPath;
         break;
       } catch {
@@ -463,7 +438,7 @@ export class ActionRunner {
 
     // If no build directory was found, use the default (dist)
     if (!buildDir) {
-      buildDir = nodePath.join(webcontainer.workdir, 'dist');
+      buildDir = nodePath.join(environment.workdir, 'dist');
     }
 
     const buildResult = {
@@ -590,7 +565,7 @@ export class ActionRunner {
 
         // Check if any of the files exist using WebContainer
         try {
-          const webcontainer = await this.#webcontainer;
+          const environment = await this.#environment;
           const existingFiles = [];
 
           for (const filePath of filePaths) {
@@ -599,7 +574,7 @@ export class ActionRunner {
             } // Skip flags
 
             try {
-              await webcontainer.fs.readFile(filePath);
+              await environment.readFile(filePath);
               existingFiles.push(filePath);
             } catch {
               // File doesn't exist, skip it
@@ -635,8 +610,8 @@ export class ActionRunner {
         const targetDir = cdMatch[1].trim();
 
         try {
-          const webcontainer = await this.#webcontainer;
-          await webcontainer.fs.readdir(targetDir);
+          const environment = await this.#environment;
+          await environment.listFiles(targetDir);
         } catch {
           return {
             shouldModify: true,
@@ -655,8 +630,8 @@ export class ActionRunner {
         const sourceFile = parts[1];
 
         try {
-          const webcontainer = await this.#webcontainer;
-          await webcontainer.fs.readFile(sourceFile);
+          const environment = await this.#environment;
+          await environment.readFile(sourceFile);
         } catch {
           return {
             shouldModify: false,
