@@ -16,6 +16,7 @@ import { CsvTool } from './CsvTool';
 import { BusinessDocumentTool } from './BusinessDocumentTool';
 import { SignatureTool } from './SignatureTool';
 import { CalculatorTool } from './CalculatorTool';
+import { batch2Slugs, CalculatorBatch2Tool } from './CalculatorBatch2Tool';
 
 export function ToolShell({ tool }: { tool: ToolDefinition }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -80,7 +81,9 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
         </span>
       </header>
       <section className="tp-workspace" aria-label={`${tool.name} workspace`}>
-        {isCalculator ? (
+        {isCalculator && batch2Slugs.has(tool.id) ? (
+          <CalculatorBatch2Tool slug={tool.id} />
+        ) : isCalculator ? (
           <CalculatorTool slug={tool.id} />
         ) : isJson ? (
           <JsonFormatter />

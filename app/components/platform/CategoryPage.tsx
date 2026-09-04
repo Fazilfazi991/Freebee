@@ -16,8 +16,21 @@ export function CategoryPage({ category }: { category: CategoryDefinition }) {
   );
   const calculatorGroups = [
     ['Date & time', ['age-calculator', 'date-calculator', 'date-difference-calculator', 'time-calculator']],
-    ['Health', ['bmi-calculator', 'calorie-calculator']],
-    ['Math', ['percentage-calculator']],
+    [
+      'Health & fitness',
+      [
+        'bmi-calculator',
+        'calorie-calculator',
+        'pace-calculator',
+        'body-fat-calculator',
+        'ideal-weight-calculator',
+        'water-intake-calculator',
+        'due-date-calculator',
+        'pregnancy-calculator',
+      ],
+    ],
+    ['Math', ['percentage-calculator', 'fraction-calculator', 'average-calculator']],
+    ['Construction', ['square-footage-calculator', 'concrete-calculator', 'paint-calculator']],
     [
       'Finance',
       [
@@ -29,6 +42,15 @@ export function CategoryPage({ category }: { category: CategoryDefinition }) {
         'investment-calculator',
         'car-loan-calculator',
         'amortization-calculator',
+        'discount-calculator',
+        'profit-margin-calculator',
+        'markup-calculator',
+        'savings-calculator',
+        'savings-goal-calculator',
+        'retirement-calculator',
+        'debt-payoff-calculator',
+        'credit-card-payoff-calculator',
+        'fuel-cost-calculator',
       ],
     ],
   ] as const;

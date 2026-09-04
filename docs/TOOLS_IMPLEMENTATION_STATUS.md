@@ -16,6 +16,7 @@ This file is the launch source of truth. Snapshot: 4 September 2026. “Browser�
 | JSON Formatter, Base64 Encoder/Decoder, URL Encoder/Decoder, JWT Decoder, Hash Generator, Timestamp Converter, Word/Character Counter, Text Case Converter, JSON Validator, UUID Generator | Developer | Browser / native APIs | Working | Responsive / Chromium verified | Yes | JWT decode does not verify signatures; browser memory applies |
 | CSV to JSON, JSON to CSV | Developer | Browser / Papa Parse 5.7.0 (MIT) | Working | Responsive / Chromium verified | Yes | Flat JSON objects only; formula-leading cells escaped on export |
 | Age, Date, Date Difference, Time, BMI, Percentage, Simple/Compound Interest, Loan, EMI, Mortgage, Investment, Car Loan, Amortization, Calorie | Calculator | Browser / dependency-free pure TypeScript | Working | Responsive implementation / browser verification pending | Yes | Educational estimates; health and finance disclaimers apply |
+| Discount, Profit Margin, Markup, Savings, Savings Goal, Retirement, Debt/Credit Card Payoff, Fuel Cost, Pace, Body Fat, Ideal Weight, Water Intake, Due Date, Pregnancy, Square Footage, Concrete, Paint, Fraction, Average | Calculator | Browser / dependency-free pure TypeScript | Working | Responsive implementation / browser verification pending | Yes | Financial, health/pregnancy, and construction limitations are shown with each method |
 | Compress PDF, MP4 to MP3, Remove Background, AI Image Generator | Mixed | Planned | Not working | Not verified | No | Intentionally excluded from launch |
 
 Every working row uses the visible per-tool privacy disclosure. No tool payload, filename, token, hash, password, customer field, CSV cell, or OCR result is permitted by the analytics allowlist. Exact browser claims are maintained in `BROWSER_COMPATIBILITY.md`; current centralized limits are in `app/lib/tools/limits.ts`.
@@ -40,6 +41,8 @@ Deterministic fixtures live in `test-fixtures/tools`. “Automated” records en
 ## Newly implemented routes
 
 The calculator batch adds `/calculator` plus 15 nested calculator routes. All share the calculator engine and workspace, are marked browser-local, and are sitemap-eligible. Formula coverage includes calendar boundaries, leap years, duration normalization, BMI, all percentage modes, simple/compound interest, contributions, standard and zero-interest amortization, mortgage optional costs, car-loan adjustments, ending balances, and Mifflin–St Jeor BMR/TDEE.
+
+Calculator Batch 2 adds 20 more nested routes without dependencies. The category now groups 35 calculators under Finance, Health & Fitness, Date & Time, Math, and Construction. Tests cover every new pure engine, including zero/invalid denominators, zero interest, insufficient debt payments, unit conversions, pregnancy date arithmetic, construction deductions, and malformed average input.
 
 | Tool | Route | Engine | Processing | Status |
 | --- | --- | --- | --- | --- |

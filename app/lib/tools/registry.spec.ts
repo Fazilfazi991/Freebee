@@ -73,9 +73,11 @@ describe('tool registry', () => {
   });
   it('registers the complete working calculator category', () => {
     const calculators = toolsForCategory('calculator');
-    expect(calculators).toHaveLength(15);
+    expect(calculators).toHaveLength(35);
     expect(calculators.every((tool) => tool.engine === 'browser' && tool.slug.startsWith('calculator/'))).toBe(true);
     expect(searchTools('how old am I')[0]?.id).toBe('age-calculator');
     expect(searchTools('monthly installment')[0]?.id).toBe('emi-calculator');
+    expect(searchTools('petrol cost')[0]?.id).toBe('fuel-cost-calculator');
+    expect(searchTools('room area calculator')[0]?.id).toBe('square-footage-calculator');
   });
 });
