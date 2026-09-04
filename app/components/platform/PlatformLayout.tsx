@@ -25,6 +25,7 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
         </Link>
         <nav className={`tp-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">
           <NavLink to="/tools">Tools</NavLink>
+          <NavLink to="/phones">Phones</NavLink>
           <a href="/#categories">Categories</a>
           <NavLink to="/ai">AI</NavLink>
           <span className="tp-soon">
@@ -70,6 +71,7 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="tp-footer-links">
           <Link to="/tools">All tools</Link>
+          <Link to="/phones">Phones</Link>
           <Link to="/pdf">PDF</Link>
           <Link to="/image">Images</Link>
           <Link to="/developer">Developer</Link>
