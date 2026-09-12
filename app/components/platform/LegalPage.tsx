@@ -23,7 +23,7 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
         </p>
         <h2>Browser storage</h2>
         <p>
-          The application may use browser storage for necessary preferences and builder state. Business-document drafts
+          The application may use browser storage for necessary preferences and tool state. Business-document drafts
           are not automatically persisted.
         </p>
         <h2>Analytics, advertising, and cookies</h2>

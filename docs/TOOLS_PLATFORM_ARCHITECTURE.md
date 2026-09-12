@@ -2,7 +2,7 @@
 
 ## Overview
 
-The public tools platform is an isolated Remix surface inside the existing React application. The existing AI website builder remains available at `/builder`; its chat, workbench, API, deployment, and persistence modules are unchanged.
+The application is a focused Remix tools platform. Its public catalog, browser-side engines, metadata, and navigation all derive from the same tool registry.
 
 Brand and company values live in `app/config/platform.ts`. Replace that one object when a final name, domain, social profiles, or palette is selected.
 
@@ -13,7 +13,6 @@ Brand and company values live in `app/config/platform.ts`. Replace that one obje
 - `/pdf`, `/image`, `/video`, `/audio`, `/business`, `/developer`, `/ai`, `/web` — reusable category pages
 - `/calculator` and `/calculator/:slug` — grouped calculator catalog and registry-backed calculator tools
 - `/:slug` — registry-backed tool or category route with a real 404 for unknown entries
-- `/builder` — preserved AI website builder
 - `/sitemap.xml` — homepage, directory, categories, and only tools with working engines
 
 The dynamic route means a tool becomes routable when it is added to the registry; no page file needs to be duplicated.

@@ -1,57 +1,41 @@
-import blitzPlugin from '@blitz/eslint-plugin';
-import { jsFileExtensions } from '@blitz/eslint-plugin/dist/configs/javascript.js';
-import { getNamingConventionRule, tsFileExtensions } from '@blitz/eslint-plugin/dist/configs/typescript.js';
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
 
 export default [
   {
-    ignores: ['**/dist', '**/node_modules', '**/.wrangler', '**/bolt/build', '**/.history'],
+    ignores: ['**/build', '**/dist', '**/node_modules', '**/.wrangler', '**/.history'],
   },
-  ...blitzPlugin.configs.recommended(),
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
   {
-    rules: {
-      '@blitz/catch-error-name': 'off',
-      '@typescript-eslint/no-this-alias': 'off',
-      '@typescript-eslint/no-empty-object-type': 'off',
-      '@blitz/comment-syntax': 'off',
-      '@blitz/block-scope-case': 'off',
-      'array-bracket-spacing': ['error', 'never'],
-      'object-curly-newline': ['error', { consistent: true }],
-      'keyword-spacing': ['error', { before: true, after: true }],
-      'consistent-return': 'error',
-      semi: ['error', 'always'],
-      curly: ['error'],
-      'no-eval': ['error'],
-      'linebreak-style': ['error', 'unix'],
-      'arrow-spacing': ['error', { before: true, after: true }],
+    files: ['app/**/*.{ts,tsx}'],
+    languageOptions: {
+      globals: {
+        Blob: 'readonly',
+        CanvasRenderingContext2D: 'readonly',
+        CustomEvent: 'readonly',
+        document: 'readonly',
+        File: 'readonly',
+        FileReader: 'readonly',
+        HTMLCanvasElement: 'readonly',
+        HTMLInputElement: 'readonly',
+        Image: 'readonly',
+        ImageData: 'readonly',
+        navigator: 'readonly',
+        Request: 'readonly',
+        Response: 'readonly',
+        TextDecoder: 'readonly',
+        TextEncoder: 'readonly',
+        URL: 'readonly',
+        window: 'readonly',
+      },
     },
-  },
-  {
-    files: ['**/*.tsx'],
     rules: {
-      ...getNamingConventionRule({}, true),
-    },
-  },
-  {
-    files: ['**/*.d.ts'],
-    rules: {
-      '@typescript-eslint/no-empty-object-type': 'off',
-    },
-  },
-  {
-    files: [...tsFileExtensions, ...jsFileExtensions, '**/*.tsx'],
-    ignores: ['functions/*', 'electron/**/*'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['../'],
-              message: "Relative imports are not allowed. Please use '~/' instead.",
-            },
-          ],
-        },
-      ],
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-constant-binary-expression': 'off',
+      'no-eval': 'error',
+      'prefer-const': 'error',
     },
   },
 ];

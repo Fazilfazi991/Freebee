@@ -65,7 +65,7 @@ export async function renderBusinessPdf(document: BusinessDocument) {
   const pageHeight = 842;
   const left = 42;
   const right = 553;
-  const safe = (value = '') => value.replace(/[^ -~ -ÿ]/g, '-');
+  const safe = (value = '') => value.replace(/[^ -~\u00A0-\u00FF]/g, '-');
   const wrap = (value: string, maxWidth: number, size: number, strong = false) => {
     const target = strong ? bold : font;
     const lines: string[] = [];

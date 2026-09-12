@@ -25,13 +25,11 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
         </Link>
         <nav className={`tp-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">
           <NavLink to="/tools">Tools</NavLink>
-          <NavLink to="/phones">Phones</NavLink>
           <a href="/#categories">Categories</a>
           <NavLink to="/ai">AI</NavLink>
           <span className="tp-soon">
             Pricing <small>Soon</small>
           </span>
-          <NavLink to="/builder">Website builder</NavLink>
         </nav>
         <div className="tp-header-actions">
           <button
@@ -71,11 +69,9 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="tp-footer-links">
           <Link to="/tools">All tools</Link>
-          <Link to="/phones">Phones</Link>
           <Link to="/pdf">PDF</Link>
           <Link to="/image">Images</Link>
           <Link to="/developer">Developer</Link>
-          <Link to="/builder">Website builder</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/cookies">Cookies</Link>

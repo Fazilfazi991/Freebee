@@ -1,8 +1,6 @@
 import type { LoaderFunctionArgs } from '@remix-run/cloudflare';
 import { platformConfig } from '~/config/platform';
 import { categories, tools } from '~/lib/tools/registry';
-import { phoneRepository } from '~/lib/phones/repository';
-import { curatedComparisons } from '~/lib/phones/comparisons';
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const origin = new URL(request.url).origin || platformConfig.url;
@@ -12,13 +10,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
     'privacy',
     'terms',
     'cookies',
-    'phones',
-    'phones/apple',
-    'phones/samsung',
-    'phones/google',
-    'phones/finder',
-    ...phoneRepository.getPhones().map((phone) => `phones/${phone.brand}/${phone.slug}`),
-    ...curatedComparisons.map((comparison) => `phones/compare/${comparison.pair}`),
     ...categories.map((c) => c.id),
     ...tools.filter((t) => t.engine === 'browser').map((t) => t.slug),
   ];

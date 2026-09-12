@@ -4,7 +4,6 @@ import { isbot } from 'isbot';
 import ReactDOMServer from 'react-dom/server';
 import { renderHeadToString } from 'remix-island';
 import { Head } from './root';
-import { themeStore } from '~/lib/stores/theme';
 
 async function renderToWebStream(
   element: React.ReactNode,
@@ -39,8 +38,6 @@ export default async function handleRequest(
   remixContext: any,
   _loadContext: AppLoadContext,
 ) {
-  // await initializeModelList({});
-
   const readable = await renderToWebStream(<RemixServer context={remixContext} url={request.url} />, {
     signal: request.signal,
     onError(error: unknown) {
@@ -56,7 +53,7 @@ export default async function handleRequest(
       controller.enqueue(
         new Uint8Array(
           new TextEncoder().encode(
-            `<!DOCTYPE html><html lang="en" data-theme="${themeStore.value}"><head>${head}</head><body><div id="root" class="w-full h-full">`,
+            `<!DOCTYPE html><html lang="en"><head>${head}</head><body><div id="root">`,
           ),
         ),
       );
@@ -95,9 +92,6 @@ export default async function handleRequest(
   }
 
   responseHeaders.set('Content-Type', 'text/html');
-
-  responseHeaders.set('Cross-Origin-Embedder-Policy', 'require-corp');
-  responseHeaders.set('Cross-Origin-Opener-Policy', 'same-origin');
 
   return new Response(body, {
     headers: responseHeaders,
