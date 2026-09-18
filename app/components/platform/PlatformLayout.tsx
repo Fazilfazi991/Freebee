@@ -75,6 +75,9 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/cookies">Cookies</Link>
+          <button type="button" className="tp-footer-setting" onClick={() => window.dispatchEvent(new CustomEvent('tool-platform:open-consent-settings'))}>
+            Cookie settings
+          </button>
           {platformConfig.feedbackUrl && <a href={platformConfig.feedbackUrl}>Send feedback</a>}
         </div>
         <p className="tp-fine">

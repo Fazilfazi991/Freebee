@@ -28,8 +28,12 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
         </p>
         <h2>Analytics, advertising, and cookies</h2>
         <p>
-          No analytics provider or advertising network is connected to the public tools at this time. If that changes,
-          this policy and any legally required consent controls must be updated before activation.
+          Freebee may use Google Analytics 4 as an optional analytics service to understand aggregate tool usage,
+          page performance, and navigation. It activates only after you select “Allow analytics” and can be changed
+          later through Cookie settings. The service may receive page paths, page titles, tool/category metadata,
+          processing status, and generic error codes. It does not receive tool inputs, file contents, filenames,
+          calculator values, OCR/CSV content, passwords, tokens, customer details, or entered contact information.
+          This wording is a draft for legal review and does not make jurisdiction-specific claims.
         </p>
         <h2>Future services</h2>
         <p>
@@ -51,16 +55,17 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
       <article className="tp-legal">
         <h1>Cookie notice</h1>
         <p>
-          <strong>Draft for legal review.</strong> No advertising or analytics cookies are currently enabled on the
-          public tools.
+          <strong>Draft for legal review.</strong> Analytics is optional and is disabled until you choose “Allow
+          analytics.”
         </p>
         <p>
           Necessary browser storage may be used for application preferences and functionality. A consent banner is
           intentionally not shown while no optional cookie category is active.
         </p>
         <p>
-          Before analytics or advertising is enabled, consent requirements must be reviewed for the launch jurisdictions
-          and this notice updated.
+          “Only necessary” stores a denied analytics preference and does not load Google Analytics. You can change the
+          preference later using Cookie settings. Analytics cookies, if enabled, are controlled by Google Analytics;
+          retention and jurisdiction-specific requirements should be reviewed before activation.
         </p>
         <p>
           Contact: <a href={`mailto:${cookieContact}`}>{cookieContact}</a>

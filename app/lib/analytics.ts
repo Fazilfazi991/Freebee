@@ -69,7 +69,19 @@ export function hasAnalyticsConsent() {
 export function setAnalyticsConsent(granted: boolean) {
   if (typeof window === 'undefined') return;
   window.localStorage.setItem(consentStorageKey, granted ? 'granted' : 'denied');
+  if (!granted) disableGa4();
   window.dispatchEvent(new CustomEvent(consentEventName, { detail: { granted } }));
+}
+
+function disableGa4() {
+  document.cookie.split(';').forEach((cookie) => {
+    const name = cookie.split('=')[0]?.trim();
+    if (name?.startsWith('_ga') || name === '_gid' || name === '_gat') {
+      document.cookie = `${name}=; Max-Age=0; path=/`;
+    }
+  });
+  document.getElementById(gaScriptId)?.remove();
+  gaConfigured = false;
 }
 
 function canUseGa4() {

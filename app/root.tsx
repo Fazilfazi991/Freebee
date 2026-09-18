@@ -3,6 +3,7 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from '@remix-run/reac
 import { createHead } from 'remix-island';
 import { platformConfig } from './config/platform';
 import { AnalyticsBridge } from './components/platform/AnalyticsBridge';
+import { AnalyticsConsent } from './components/platform/AnalyticsConsent';
 
 export const links: LinksFunction = () => [
   {
@@ -44,6 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <>
       {children}
       <AnalyticsBridge />
+      <AnalyticsConsent />
       <ScrollRestoration />
       <Scripts />
     </>
