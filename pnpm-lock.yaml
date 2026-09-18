@@ -14,6 +14,9 @@ importers:
       '@remix-run/cloudflare-pages':
         specifier: ^2.17.2
         version: 2.17.2(@cloudflare/workers-types@4.20251014.0)(typescript@5.8.3)
+      '@remix-run/node':
+        specifier: 2.17.2
+        version: 2.17.2(typescript@5.8.3)
       '@remix-run/react':
         specifier: ^2.17.2
         version: 2.17.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.8.3)
@@ -6492,7 +6495,7 @@ snapshots:
       call-bound: 1.0.4
       gopd: 1.2.0
       has-tostringtag: 1.0.2
-      hasown: 2.0.2
+      hasown: 2.0.4
 
   is-stream@2.0.1: {}
 
