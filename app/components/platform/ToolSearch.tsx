@@ -13,7 +13,7 @@ export function GlobalToolSearch({ autoFocus = false, onSelect }: { autoFocus?: 
     event.preventDefault();
     const firstResult = results[0];
     if (firstResult) {
-      track('search', { query });
+      track('search', { searchResultCount: results.length });
       navigate(`/${firstResult.slug}`);
       onSelect?.();
     }
@@ -27,7 +27,7 @@ export function GlobalToolSearch({ autoFocus = false, onSelect }: { autoFocus?: 
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
-          track('search', { query: e.target.value });
+          track('search', { searchResultCount: searchTools(e.target.value).length });
         }}
         placeholder="Search tools…"
         aria-label="Search all tools"
