@@ -4,6 +4,7 @@ import { PlatformLayout, platformLinks } from '~/components/platform/PlatformLay
 import { ToolShell } from '~/components/platform/ToolShell';
 import { platformConfig } from '~/config/platform';
 import { toolBySlug } from '~/lib/tools/registry';
+import { absoluteUrl, getToolSeo } from '~/lib/seo';
 
 export const links: LinksFunction = platformLinks;
 export async function loader({ params }: LoaderFunctionArgs) {
@@ -18,11 +19,15 @@ export async function loader({ params }: LoaderFunctionArgs) {
 export const meta: MetaFunction<typeof loader> = ({ data }) =>
   data
     ? [
-        { title: `${data.tool.name} | ${platformConfig.name}` },
-        { name: 'description', content: data.tool.description },
-        { tagName: 'link', rel: 'canonical', href: `${platformConfig.url}/${data.tool.slug}` },
-        { property: 'og:title', content: `${data.tool.name} | ${platformConfig.name}` },
-        { property: 'og:description', content: data.tool.description },
+        { title: getToolSeo(data.tool).title },
+        { name: 'description', content: getToolSeo(data.tool).description },
+        ...(absoluteUrl(`/${data.tool.slug}`)
+          ? [{ tagName: 'link', rel: 'canonical', href: absoluteUrl(`/${data.tool.slug}`) }]
+          : []),
+        { property: 'og:site_name', content: platformConfig.name },
+        { property: 'og:title', content: getToolSeo(data.tool).title },
+        { property: 'og:description', content: getToolSeo(data.tool).description },
+        { name: 'robots', content: 'index, follow' },
       ]
     : [{ title: `Not found | ${platformConfig.name}` }];
 export default function CalculatorRoute() {
@@ -33,7 +38,7 @@ export default function CalculatorRoute() {
       '@type': 'WebApplication',
       name: tool.name,
       description: tool.description,
-      url: `${platformConfig.url}/${tool.slug}`,
+      ...(absoluteUrl(`/${tool.slug}`) ? { url: absoluteUrl(`/${tool.slug}`) } : {}),
       applicationCategory: 'CalculatorApplication',
       operatingSystem: 'Any modern web browser',
     },
@@ -41,9 +46,9 @@ export default function CalculatorRoute() {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Tools', item: `${platformConfig.url}/tools` },
-        { '@type': 'ListItem', position: 2, name: 'Calculators', item: `${platformConfig.url}/calculator` },
-        { '@type': 'ListItem', position: 3, name: tool.name, item: `${platformConfig.url}/${tool.slug}` },
+        { '@type': 'ListItem', position: 1, name: 'Tools', item: absoluteUrl('/tools') },
+        { '@type': 'ListItem', position: 2, name: 'Calculators', item: absoluteUrl('/calculator') },
+        { '@type': 'ListItem', position: 3, name: tool.name, item: absoluteUrl(`/${tool.slug}`) },
       ],
     },
   ];

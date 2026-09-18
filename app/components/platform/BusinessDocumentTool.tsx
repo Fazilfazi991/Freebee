@@ -87,7 +87,7 @@ function PartyBlock({
           className="tp-document-field"
           type="email"
           aria-label={`${title} email`}
-          placeholder="email@example.com"
+          placeholder="email@company.com"
           value={party.email}
           onChange={(e) => onChange('email', e.target.value)}
         />

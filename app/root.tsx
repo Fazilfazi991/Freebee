@@ -7,7 +7,25 @@ export const links: LinksFunction = () => [
   {
     rel: 'icon',
     href: platformConfig.favicon,
-    type: 'image/svg+xml',
+    type: 'image/png',
+    sizes: '32x32',
+  },
+  {
+    rel: 'apple-touch-icon',
+    href: '/brand/apple-touch-icon.png',
+    sizes: '180x180',
+  },
+  {
+    rel: 'icon',
+    href: '/brand/freebee-icon-192.png',
+    type: 'image/png',
+    sizes: '192x192',
+  },
+  {
+    rel: 'icon',
+    href: '/brand/freebee-icon-512.png',
+    type: 'image/png',
+    sizes: '512x512',
   },
 ];
 

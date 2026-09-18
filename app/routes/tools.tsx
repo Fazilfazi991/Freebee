@@ -3,15 +3,23 @@ import { PlatformLayout, platformLinks } from '~/components/platform/PlatformLay
 import { ToolCard } from '~/components/platform/ToolCard';
 import { GlobalToolSearch } from '~/components/platform/ToolSearch';
 import { platformConfig } from '~/config/platform';
-import { tools } from '~/lib/tools/registry';
+import { publicIndexableTools } from '~/lib/seo';
+import { absoluteUrl, breadcrumbSchema } from '~/lib/seo';
 export const links: LinksFunction = platformLinks;
 export const meta: MetaFunction = () => [
   { title: `All tools | ${platformConfig.name}` },
   { name: 'description', content: 'Browse file, media, business, developer, AI, and web tools.' },
+  ...(absoluteUrl('/tools') ? [{ tagName: 'link', rel: 'canonical', href: absoluteUrl('/tools') }] : []),
 ];
 export default function ToolsIndex() {
   return (
     <PlatformLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema([{ name: 'Tools', path: '/tools' }])) ,
+        }}
+      />
       <div className="tp-page">
         <section className="tp-category-head">
           <p>Tool directory</p>
@@ -22,7 +30,7 @@ export default function ToolsIndex() {
           </div>
         </section>
         <div className="tp-tool-grid">
-          {tools.map((tool) => (
+          {publicIndexableTools.map((tool) => (
             <ToolCard key={tool.id} tool={tool} />
           ))}
         </div>

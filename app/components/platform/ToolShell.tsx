@@ -2,7 +2,7 @@ import { Link } from '@remix-run/react';
 import { AlertCircle, FileUp, LockKeyhole, RotateCcw } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { ToolDefinition } from '~/lib/tools/types';
-import { tools } from '~/lib/tools/registry';
+import { relatedToolsFor } from '~/lib/seo';
 import { track } from '~/lib/analytics';
 import { ToolCard } from './ToolCard';
 import { JsonFormatter } from './JsonFormatter';
@@ -29,7 +29,7 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
       track('tool_upload', { toolSlug: tool.slug, processingLocation: 'browser' });
     }
   };
-  const related = tools.filter((item) => item.category === tool.category && item.id !== tool.id).slice(0, 3);
+  const related = relatedToolsFor(tool, 5);
   const isJson = tool.slug === 'json-formatter';
   const isQr = tool.slug === 'qr-generator';
   const isOcr = tool.slug === 'image-to-text';

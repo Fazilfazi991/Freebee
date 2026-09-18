@@ -12,6 +12,7 @@
     "dev": "remix vite:dev",
     "dev:local": "remix vite:dev --mode localdev --host 127.0.0.1",
     "test": "vitest --run",
+    "seo:crawl": "node scripts/seo-crawl.mjs",
     "test:watch": "vitest",
     "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint app",
     "lint:fix": "pnpm run lint -- --fix && prettier app --write",

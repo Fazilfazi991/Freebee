@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import type { CategoryDefinition } from '~/lib/tools/types';
 import { toolsForCategory } from '~/lib/tools/registry';
+import { isIndexableTool } from '~/lib/seo';
 import { ToolCard } from './ToolCard';
 import { Search } from 'lucide-react';
 
 export function CategoryPage({ category }: { category: CategoryDefinition }) {
   const [query, setQuery] = useState('');
-  const categoryTools = toolsForCategory(category.id);
+  const categoryTools = toolsForCategory(category.id).filter(isIndexableTool);
   const visible = useMemo(
     () =>
       categoryTools.filter((tool) =>

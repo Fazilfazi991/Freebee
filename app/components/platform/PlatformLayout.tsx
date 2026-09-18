@@ -19,17 +19,15 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
       </a>
       <header className="tp-header">
         <Link to="/" className="tp-brand" aria-label={`${platformConfig.name} home`}>
-          <span className="tp-mark">{platformConfig.shortName}</span>
+          <span className="tp-mark"><img src={platformConfig.icon} alt="" /></span>
           <span>{platformConfig.name}</span>
           {platformConfig.beta && <small className="tp-beta">Beta</small>}
         </Link>
         <nav className={`tp-nav ${menuOpen ? 'is-open' : ''}`} aria-label="Main navigation">
           <NavLink to="/tools">Tools</NavLink>
-          <a href="/#categories">Categories</a>
-          <NavLink to="/ai">AI</NavLink>
-          <span className="tp-soon">
-            Pricing <small>Soon</small>
-          </span>
+          <NavLink to="/pdf">PDF</NavLink>
+          <NavLink to="/image">Images</NavLink>
+          <NavLink to="/calculator">Calculators</NavLink>
         </nav>
         <div className="tp-header-actions">
           <button
@@ -62,23 +60,25 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
       <footer className="tp-footer">
         <div>
           <Link to="/" className="tp-brand">
-            <span className="tp-mark">{platformConfig.shortName}</span>
+            <span className="tp-mark"><img src={platformConfig.icon} alt="" /></span>
             <span>{platformConfig.name}</span>
           </Link>
-          <p>{platformConfig.description}</p>
+          <p>{platformConfig.tagline}</p>
         </div>
         <div className="tp-footer-links">
           <Link to="/tools">All tools</Link>
           <Link to="/pdf">PDF</Link>
           <Link to="/image">Images</Link>
+          <Link to="/calculator">Calculators</Link>
           <Link to="/developer">Developer</Link>
+          <Link to="/builder">AI Builder</Link>
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
           <Link to="/cookies">Cookies</Link>
           {platformConfig.feedbackUrl && <a href={platformConfig.feedbackUrl}>Send feedback</a>}
         </div>
         <p className="tp-fine">
-          © {new Date().getFullYear()} {platformConfig.company}. Temporary brand configuration.
+          © {new Date().getFullYear()} {platformConfig.company}. {platformConfig.tagline}
         </p>
       </footer>
     </div>
