@@ -1,6 +1,6 @@
-# Freebee Tools
+# freebee.world
 
-Freebee Tools is a registry-driven collection of focused online utilities for documents, images, media, calculators, business workflows, and developer tasks. Browser-capable tools process files locally whenever possible.
+freebee.world is a registry-driven collection of focused online utilities for documents, images, media, calculators, business workflows, and developer tasks. Browser-capable tools process files locally whenever possible.
 
 ## Development
 

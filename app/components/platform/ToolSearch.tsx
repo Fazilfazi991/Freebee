@@ -1,4 +1,4 @@
-import { Link } from '@remix-run/react';
+import { Link, useNavigate } from '@remix-run/react';
 import { Search, ArrowUpRight } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { searchTools } from '~/lib/tools/registry';
@@ -7,10 +7,20 @@ import { ToolIcon } from './Icon';
 
 export function GlobalToolSearch({ autoFocus = false, onSelect }: { autoFocus?: boolean; onSelect?: () => void }) {
   const [query, setQuery] = useState('');
+  const navigate = useNavigate();
   const results = useMemo(() => searchTools(query).slice(0, 6), [query]);
+  const submitSearch = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const firstResult = results[0];
+    if (firstResult) {
+      track('search', { query });
+      navigate(`/${firstResult.slug}`);
+      onSelect?.();
+    }
+  };
 
   return (
-    <div className="tp-search-wrap">
+    <form className="tp-search-wrap" onSubmit={submitSearch} role="search">
       <Search aria-hidden="true" />
       <input
         autoFocus={autoFocus}
@@ -19,7 +29,7 @@ export function GlobalToolSearch({ autoFocus = false, onSelect }: { autoFocus?: 
           setQuery(e.target.value);
           track('search', { query: e.target.value });
         }}
-        placeholder="Search PDF, image, QR, JSON…"
+        placeholder="Search tools…"
         aria-label="Search all tools"
       />
       {query && (
@@ -42,6 +52,6 @@ export function GlobalToolSearch({ autoFocus = false, onSelect }: { autoFocus?: 
           )}
         </div>
       )}
-    </div>
+    </form>
   );
 }

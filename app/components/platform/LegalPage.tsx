@@ -1,8 +1,8 @@
 import { platformConfig } from '~/config/platform';
 
 export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
-  const contact = platformConfig.legal.privacyEmail || '[PRIVACY CONTACT — TO BE CONFIRMED]';
-  const cookieContact = platformConfig.legal.cookieEmail || '[COOKIE CONTACT — TO BE CONFIRMED]';
+  const contact = platformConfig.legal.privacyEmail || platformConfig.email;
+  const cookieContact = platformConfig.legal.cookieEmail || platformConfig.email;
   const owner = platformConfig.legal.entity || '[LEGAL ENTITY — TO BE CONFIRMED]';
   const effectiveDate = platformConfig.legal.effectiveDate || '[EFFECTIVE DATE — TO BE CONFIRMED]';
 
@@ -40,7 +40,7 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
         <p>
           {owner}
           <br />
-          {contact}
+          <a href={`mailto:${contact}`}>{contact}</a>
         </p>
       </article>
     );
@@ -62,7 +62,9 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
           Before analytics or advertising is enabled, consent requirements must be reviewed for the launch jurisdictions
           and this notice updated.
         </p>
-        <p>Contact: {cookieContact}</p>
+        <p>
+          Contact: <a href={`mailto:${cookieContact}`}>{cookieContact}</a>
+        </p>
       </article>
     );
   }
@@ -71,8 +73,8 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
     <article className="tp-legal">
       <h1>Terms of use</h1>
       <p>
-        <strong>Draft for legal review; not legal advice.</strong> Final governing entity, jurisdiction, effective date,
-        and contact details remain placeholders.
+        <strong>Draft for legal review; not legal advice.</strong> Final governing entity, jurisdiction, and effective
+        date remain to be confirmed.
       </p>
       <h2>Service</h2>
       <p>
@@ -92,7 +94,7 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'cookies' }) {
       <p>
         Provider: {owner}
         <br />
-        Contact: {contact}
+        Contact: <a href={`mailto:${contact}`}>{contact}</a>
         <br />
         Registered address: {platformConfig.legal.registeredAddress || '[REGISTERED ADDRESS — TO BE CONFIRMED]'}
         <br />
