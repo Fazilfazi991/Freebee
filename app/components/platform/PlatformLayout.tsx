@@ -19,7 +19,7 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
       </a>
       <header className="tp-header">
         <Link to="/" className="tp-brand" aria-label={`${platformConfig.name} home`}>
-          <span className="tp-mark"><img src={platformConfig.icon} alt="" /></span>
+          <span className="tp-mark"><img src={platformConfig.icon} alt="" width="32" height="32" /></span>
           <span>{platformConfig.name}</span>
           {platformConfig.beta && <small className="tp-beta">Beta</small>}
         </Link>
@@ -60,7 +60,7 @@ export function PlatformLayout({ children }: { children: React.ReactNode }) {
       <footer className="tp-footer">
         <div>
           <Link to="/" className="tp-brand">
-            <span className="tp-mark"><img src={platformConfig.icon} alt="" /></span>
+            <span className="tp-mark"><img src={platformConfig.icon} alt="" width="32" height="32" /></span>
             <span>{platformConfig.name}</span>
           </Link>
           <p>{platformConfig.tagline}</p>

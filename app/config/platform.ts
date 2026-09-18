@@ -8,7 +8,7 @@ export const platformConfig = {
   description: 'Free online tools for PDFs, images, calculators, text and everyday tasks. Fast, simple and easy to use.',
   tagline: 'Useful tools, made simple.',
   logo: '/brand/freebee-world-logo.png',
-  icon: '/brand/freebee-icon.png',
+  icon: '/brand/freebee-icon-32.png',
   favicon: '/brand/freebee-icon-32.png',
   company: 'freebee.world',
   email: 'info@fusionventuresglobal.com',
