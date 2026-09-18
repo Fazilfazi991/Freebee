@@ -2,7 +2,7 @@ import { Link } from '@remix-run/react';
 import { AlertCircle, FileUp, LockKeyhole, RotateCcw } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { ToolDefinition } from '~/lib/tools/types';
-import { relatedToolsFor } from '~/lib/seo';
+import { getToolSeo, getPriorityPageContent, relatedToolsFor } from '~/lib/seo';
 import { track } from '~/lib/analytics';
 import { ToolCard } from './ToolCard';
 import { JsonFormatter } from './JsonFormatter';
@@ -30,6 +30,8 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
     }
   };
   const related = relatedToolsFor(tool, 5);
+  const seo = getToolSeo(tool);
+  const priorityContent = getPriorityPageContent(tool.slug);
   const isJson = tool.slug === 'json-formatter';
   const isQr = tool.slug === 'qr-generator';
   const isOcr = tool.slug === 'image-to-text';
@@ -181,6 +183,24 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
           </ul>
         </div>
       </section>
+      {priorityContent && (
+        <section className="tp-info tp-priority-guide">
+          <div>
+            <h2>How to use {tool.name}</h2>
+            <ol>{priorityContent.howToUse.map((step) => <li key={step}>{step}</li>)}</ol>
+          </div>
+          <div>
+            <h2>Method</h2>
+            <p>{priorityContent.method}</p>
+            <h2>Example</h2>
+            <p>{priorityContent.example}</p>
+          </div>
+          <div>
+            <h2>Limitations</h2>
+            <ul>{priorityContent.limitations.map((item) => <li key={item}>{item}</li>)}</ul>
+          </div>
+        </section>
+      )}
       {related.length > 0 && (
         <section>
           <h2 className="tp-section-title">Related tools</h2>
@@ -193,7 +213,7 @@ export function ToolShell({ tool }: { tool: ToolDefinition }) {
       )}
       <section className="tp-faq">
         <h2>Frequently asked questions</h2>
-        {tool.faq.map((item) => (
+        {seo.faq.map((item) => (
           <details key={item.question}>
             <summary>{item.question}</summary>
             <p>{item.answer}</p>

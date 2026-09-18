@@ -1,5 +1,6 @@
 const baseUrl = (process.env.SEO_CRAWL_BASE_URL || 'http://127.0.0.1:5174').replace(/\/$/u, '');
 const expectedCanonicalHost = process.env.SEO_EXPECTED_CANONICAL_HOST || 'freebee.world';
+const enforceCanonicalHost = new URL(baseUrl).protocol === 'https:';
 
 const fetchPage = async (path) => {
   const response = await fetch(`${baseUrl}${path}`);
@@ -30,11 +31,12 @@ for (const path of paths) {
     structuredData: /application\/ld\+json/iu.test(html),
     badDomain: /example\.com|localhost/iu.test(html),
     planned: /Engine preview/iu.test(html),
+    finalHost: new URL(response.url).host,
   });
 }
 
 const failures = rows.filter((row) =>
-  row.status !== 200 || !row.title || !row.description || !row.h1 || !row.canonical || row.canonicalHost !== expectedCanonicalHost || !row.indexable || row.badDomain || row.planned,
+  row.status !== 200 || !row.title || !row.description || !row.h1 || !row.canonical || row.canonicalHost !== expectedCanonicalHost || (enforceCanonicalHost && row.finalHost !== expectedCanonicalHost) || !row.indexable || row.badDomain || row.planned,
 );
 const canonicalValues = rows.map((row) => row.canonical).filter(Boolean);
 const duplicateCanonicals = canonicalValues.length - new Set(canonicalValues).size;
@@ -47,6 +49,7 @@ console.log(JSON.stringify({
   statusCounts: Object.fromEntries([...new Set(rows.map((row) => row.status))].map((status) => [status, rows.filter((row) => row.status === status).length])),
   duplicateSitemapUrls: paths.length - uniquePaths.size,
   duplicateCanonicals,
+  canonicalHostMismatches: rows.filter((row) => enforceCanonicalHost && row.finalHost !== expectedCanonicalHost).map((row) => ({ path: row.path, finalHost: row.finalHost })),
   structuredDataFailures: structuredDataFailures.map((row) => row.path),
   failures: failures.map((row) => row.path),
 }, null, 2));

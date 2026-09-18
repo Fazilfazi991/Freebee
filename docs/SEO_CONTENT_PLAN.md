@@ -1,5 +1,7 @@
 # First 20 supporting article opportunities
 
+These are content hypotheses, not GSC findings. The connected GSC property had no query/page rows yet on 2026-09-18 because Performance and Page indexing were still processing. Do not publish or build routes from this list until GSC evidence and supplied demand data support the intent.
+
 1. How BMI is calculated — `how is BMI calculated` — BMI Calculator — definition, formula, example, limitations — supports a high-intent health tool.
 2. BMI categories and their limitations — `BMI categories` — BMI Calculator — ranges, caveats, next steps — answers a distinct informational question.
 3. How mortgage payments are calculated — `mortgage payment formula` — Mortgage Calculator — principal, rate, term, example — explains the tool inputs.

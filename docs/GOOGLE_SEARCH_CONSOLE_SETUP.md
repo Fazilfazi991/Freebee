@@ -1,11 +1,10 @@
-# Google Search Console readiness
+# Google Search Console — freebee.world
 
-After the final domain is selected:
+The connected property is `sc-domain:freebee.world`. Ownership and access are already established; do not recreate the property or store account/session information in the repository.
 
-1. Add a Domain property and verify DNS ownership, or verify the exact HTTPS URL property.
-2. Submit `/sitemap.xml` once the production canonical domain is live.
-3. Use URL Inspection for the home page, each category hub, and representative tools.
-4. Review Page Indexing, Core Web Vitals, manual actions, security issues, and search performance.
-5. Investigate discovered-not-indexed, duplicate-canonical, blocked-by-robots, and soft-404 states before expanding routes.
-
-No credentials are stored or connected by this task. Canonicals remain unset until `VITE_PUBLIC_SITE_URL` is configured.
+1. Correct the live host redirect so `https://freebee.world` remains the canonical host instead of redirecting to `www`.
+2. Submit `https://freebee.world/sitemap.xml`.
+3. Use URL Inspection for the homepage, each category hub, and representative tools without repeatedly requesting indexing.
+4. Review Page indexing, Core Web Vitals, HTTPS, manual actions, security issues, and Performance.
+5. Record actual clicks, impressions, CTR, position, query/page exports, indexed counts, sitemap status, and reasons in `GSC_BASELINE_REPORT.md`.
+6. Investigate discovered-not-indexed, duplicate-canonical, blocked-by-robots, and soft-404 states before expanding routes.
