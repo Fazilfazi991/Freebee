@@ -7,6 +7,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const paths = [
     '',
     'tools',
+    'builder',
     'privacy',
     'terms',
     'cookies',
