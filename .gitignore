@@ -30,9 +30,11 @@ functions/build/
 .env.local
 .env
 .dev.vars
+.cert/
 *.vars
 .wrangler
 _worker.bundle
+.vercel/
 
 Modelfile
 modelfiles
