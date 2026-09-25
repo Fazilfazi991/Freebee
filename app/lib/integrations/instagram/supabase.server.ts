@@ -120,6 +120,17 @@ export async function getConnection(config: InstagramConfig, ownerUserId: string
   };
 }
 
+// Server-only publishing access. Never return this row from a Remix loader or action.
+export async function getEncryptedConnection(config: InstagramConfig, ownerUserId: string): Promise<(ConnectionRow & { access_token_encrypted: string | null }) | null> {
+  const url = restUrl(config, 'instagram_connections');
+  url.searchParams.set('select', 'id,owner_user_id,instagram_user_id,username,account_type,token_expires_at,scopes,status,connected_at,updated_at,access_token_encrypted');
+  url.searchParams.set('owner_user_id', `eq.${ownerUserId}`);
+  url.searchParams.set('instagram_user_id', `eq.${config.expectedAccountId}`);
+  url.searchParams.set('limit', '1');
+  const rows = await database<Array<ConnectionRow & { access_token_encrypted: string | null }>>(config, url, { method: 'GET' });
+  return rows[0] ?? null;
+}
+
 export async function insertOAuthState(config: InstagramConfig, data: {
   stateHash: string;
   ownerUserId: string;
