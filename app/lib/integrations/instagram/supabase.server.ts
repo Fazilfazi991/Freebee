@@ -67,11 +67,11 @@ export async function getVerifiedUser(config: InstagramConfig, accessToken: stri
   }, 'session_expired');
 }
 
-function restUrl(config: InstagramConfig, table: string): URL {
+export function restUrl(config: InstagramConfig, table: string): URL {
   return new URL(`/rest/v1/${table}`, config.supabaseUrl);
 }
 
-async function database<T>(config: InstagramConfig, url: URL, init: RequestInit, failureCode = 'database_unavailable'): Promise<T> {
+export async function database<T>(config: InstagramConfig, url: URL, init: RequestInit, failureCode = 'database_unavailable'): Promise<T> {
   return requestJson<T>(url, {
     ...init,
     headers: {
@@ -94,7 +94,67 @@ export type ConnectionRow = {
   status: 'connected' | 'disconnected';
   connected_at: string | null;
   updated_at: string;
+  display_name?: string | null;
+  default_share_to_feed?: boolean;
+  posting_enabled?: boolean;
+  ordering_mode?: 'sequential' | 'random' | 'smart_random';
+  posts_per_day?: number;
+  timezone?: string;
+  last_publish_at?: string | null;
+  auth_failure_count?: number;
 };
+
+const accountColumns = 'id,owner_user_id,instagram_user_id,username,account_type,token_expires_at,scopes,status,connected_at,updated_at,display_name,default_share_to_feed,posting_enabled,ordering_mode,posts_per_day,timezone,last_publish_at,auth_failure_count';
+
+export async function listInstagramAccounts(config: InstagramConfig, ownerUserId: string): Promise<ConnectionRow[]> {
+  const url = restUrl(config, 'instagram_connections');
+  url.searchParams.set('select', accountColumns);
+  url.searchParams.set('owner_user_id', `eq.${ownerUserId}`);
+  url.searchParams.set('order', 'username.asc');
+  return database<ConnectionRow[]>(config, url, { method: 'GET' });
+}
+
+export async function getInstagramAccount(config: InstagramConfig, ownerUserId: string, accountId: string): Promise<ConnectionRow | null> {
+  const url = restUrl(config, 'instagram_connections');
+  url.searchParams.set('select', accountColumns);
+  url.searchParams.set('owner_user_id', `eq.${ownerUserId}`);
+  url.searchParams.set('id', `eq.${accountId}`);
+  url.searchParams.set('limit', '1');
+  return (await database<ConnectionRow[]>(config, url, { method: 'GET' }))[0] ?? null;
+}
+
+export async function getEncryptedInstagramAccount(config: InstagramConfig, ownerUserId: string, accountId: string): Promise<(ConnectionRow & { access_token_encrypted: string | null }) | null> {
+  const url = restUrl(config, 'instagram_connections');
+  url.searchParams.set('select', `${accountColumns},access_token_encrypted`);
+  url.searchParams.set('owner_user_id', `eq.${ownerUserId}`);
+  url.searchParams.set('id', `eq.${accountId}`);
+  url.searchParams.set('limit', '1');
+  return (await database<Array<ConnectionRow & { access_token_encrypted: string | null }>>(config, url, { method: 'GET' }))[0] ?? null;
+}
+
+export async function updateInstagramAccount(config: InstagramConfig, ownerUserId: string, accountId: string, patch: Partial<Pick<ConnectionRow,
+  'display_name' | 'default_share_to_feed' | 'posting_enabled' | 'ordering_mode' | 'posts_per_day' | 'timezone' | 'auth_failure_count' | 'last_publish_at'>>): Promise<ConnectionRow | null> {
+  const url = restUrl(config, 'instagram_connections');
+  url.searchParams.set('select', accountColumns);
+  url.searchParams.set('owner_user_id', `eq.${ownerUserId}`);
+  url.searchParams.set('id', `eq.${accountId}`);
+  const rows = await database<ConnectionRow[]>(config, url, {
+    method: 'PATCH', headers: { Prefer: 'return=representation' },
+    body: JSON.stringify({ ...patch, updated_at: new Date().toISOString() }),
+  });
+  return rows[0] ?? null;
+}
+
+export async function disconnectInstagramAccount(config: InstagramConfig, ownerUserId: string, accountId: string): Promise<void> {
+  const url = restUrl(config, 'instagram_connections');
+  url.searchParams.set('owner_user_id', `eq.${ownerUserId}`);
+  url.searchParams.set('id', `eq.${accountId}`);
+  await database(config, url, {
+    method: 'PATCH', headers: { Prefer: 'return=minimal' },
+    body: JSON.stringify({ access_token_encrypted: null, token_expires_at: null,
+      status: 'disconnected', posting_enabled: false, updated_at: new Date().toISOString() }),
+  });
+}
 
 export async function getConnection(config: InstagramConfig, ownerUserId: string): Promise<ConnectionRow | null> {
   const url = restUrl(config, 'instagram_connections');
@@ -136,6 +196,7 @@ export async function insertOAuthState(config: InstagramConfig, data: {
   ownerUserId: string;
   sessionHash: string;
   expiresAt: string;
+  targetInstagramUserId?: string;
 }): Promise<void> {
   await database(config, restUrl(config, 'instagram_oauth_states'), {
     method: 'POST',
@@ -145,6 +206,7 @@ export async function insertOAuthState(config: InstagramConfig, data: {
       owner_user_id: data.ownerUserId,
       session_hash: data.sessionHash,
       expires_at: data.expiresAt,
+      target_instagram_user_id: data.targetInstagramUserId ?? null,
     }),
   });
 }
@@ -154,20 +216,20 @@ export async function consumeOAuthState(config: InstagramConfig, data: {
   ownerUserId: string;
   sessionHash: string;
   now: string;
-}): Promise<boolean> {
+}): Promise<{ targetInstagramUserId: string | null } | null> {
   const url = restUrl(config, 'instagram_oauth_states');
   url.searchParams.set('state_hash', `eq.${data.stateHash}`);
   url.searchParams.set('owner_user_id', `eq.${data.ownerUserId}`);
   url.searchParams.set('session_hash', `eq.${data.sessionHash}`);
   url.searchParams.set('consumed_at', 'is.null');
   url.searchParams.set('expires_at', `gt.${data.now}`);
-  url.searchParams.set('select', 'state_hash');
-  const rows = await database<Array<{ state_hash: string }>>(config, url, {
+  url.searchParams.set('select', 'state_hash,target_instagram_user_id');
+  const rows = await database<Array<{ state_hash: string; target_instagram_user_id: string | null }>>(config, url, {
     method: 'PATCH',
     headers: { Prefer: 'return=representation' },
     body: JSON.stringify({ consumed_at: data.now }),
   });
-  return rows.length === 1;
+  return rows.length === 1 ? { targetInstagramUserId: rows[0].target_instagram_user_id ?? null } : null;
 }
 
 export async function saveConnection(config: InstagramConfig, data: {

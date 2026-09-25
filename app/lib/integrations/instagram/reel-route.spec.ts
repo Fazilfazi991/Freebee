@@ -18,13 +18,13 @@ vi.mock('./supabase.server', () => ({
   getConnection: vi.fn(),
 }));
 
-import { action } from '~/routes/dashboard.integrations.instagram';
+import { action } from '~/routes/dashboard.instagram.test/route';
 import { requireAdmin } from './admin-auth.server';
 import { publishTestReel } from './reel-publishing.server';
 
 function args(origin = 'https://freebee.world'): ActionFunctionArgs {
   return {
-    request: new Request('https://freebee.world/dashboard/integrations/instagram', {
+    request: new Request('https://freebee.world/dashboard/instagram/test', {
       method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' },
       body: 'intent=publish&confirmation=PUBLISH+ONE+REEL',
     }),
@@ -55,6 +55,6 @@ describe('Test Reel action security', () => {
     const response = await action(args());
     expect(response.status).toBe(302);
     expect(publishTestReel).toHaveBeenCalledWith({ expectedAccountId: '17841426407668459' }, 'admin', 'PUBLISH ONE REEL');
-    expect(response.headers.get('Location')).toBe('/dashboard/integrations/instagram');
+    expect(response.headers.get('Location')).toBe('/dashboard/instagram/test');
   });
 });

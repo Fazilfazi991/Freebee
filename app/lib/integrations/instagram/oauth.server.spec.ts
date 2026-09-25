@@ -69,7 +69,7 @@ describe('Instagram OAuth connection', () => {
     await expect(finishInstagramAuthorization(config, admin, 'sample-code')).rejects.toEqual(new IntegrationFailure('token_exchange_failed'));
   });
 
-  it('stores an encrypted long-lived token only after verifying the exact test account', async () => {
+  it('stores an encrypted long-lived token after verifying a professional account from Meta', async () => {
     const fetchMock = vi.mocked(fetch)
       .mockResolvedValueOnce(response({ data: [{ access_token: 'short-test-token', permissions: INSTAGRAM_SCOPES.join(',') }] }))
       .mockResolvedValueOnce(response({ access_token: 'long-test-token', expires_in: 5183944 }))
@@ -77,11 +77,35 @@ describe('Instagram OAuth connection', () => {
       .mockResolvedValueOnce(new Response('', { status: 201 }));
     await finishInstagramAuthorization(config, admin, 'sample-code');
     expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(String(fetchMock.mock.calls[2][0])).not.toContain('long-test-token');
+    expect(new Headers(fetchMock.mock.calls[2][1]?.headers).get('Authorization')).toBe('Bearer long-test-token');
     const saved = JSON.parse(String(fetchMock.mock.calls[3][1]?.body)) as { access_token_encrypted: string; scopes: string[]; status: string };
     expect(saved.access_token_encrypted).not.toContain('long-test-token');
     expect(await decryptSecret(saved.access_token_encrypted, key, 'instagram-access-token')).toBe('long-test-token');
     expect(saved.scopes).toEqual([...INSTAGRAM_SCOPES]);
     expect(saved.status).toBe('connected');
+  });
+
+  it('accepts a second professional account without trusting a browser-supplied account ID', async () => {
+    const secondId = '17841426407669999';
+    const fetchMock = vi.mocked(fetch)
+      .mockResolvedValueOnce(response({ data: [{ access_token: 'short-test-token', permissions: INSTAGRAM_SCOPES.join(',') }] }))
+      .mockResolvedValueOnce(response({ access_token: 'long-test-token', expires_in: 5183944 }))
+      .mockResolvedValueOnce(response({ user_id: secondId, username: 'second.account', account_type: 'Business' }))
+      .mockResolvedValueOnce(new Response('', { status: 201 }));
+    await finishInstagramAuthorization(config, admin, 'sample-code');
+    const saved = JSON.parse(String(fetchMock.mock.calls[3][1]?.body)) as { instagram_user_id: string; username: string };
+    expect(saved.instagram_user_id).toBe(secondId);
+    expect(saved.username).toBe('second.account');
+  });
+
+  it('rejects a personal Instagram account', async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(response({ data: [{ access_token: 'short-test-token', permissions: INSTAGRAM_SCOPES.join(',') }] }))
+      .mockResolvedValueOnce(response({ access_token: 'long-test-token', expires_in: 5183944 }))
+      .mockResolvedValueOnce(response({ user_id: '17841426407669999', username: 'personal.account', account_type: 'Personal' }));
+    await expect(finishInstagramAuthorization(config, admin, 'sample-code')).rejects.toMatchObject({ code: 'unexpected_account' });
+    expect(fetch).toHaveBeenCalledTimes(3);
   });
 
   it('never returns the credential in dashboard metadata', async () => {

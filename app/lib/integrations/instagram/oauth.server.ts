@@ -34,13 +34,15 @@ function firstData<T>(value: T | { data: T[] }): T {
   return value as T;
 }
 
-export async function beginInstagramAuthorization(config: InstagramConfig, admin: Admin): Promise<string> {
+export async function beginInstagramAuthorization(config: InstagramConfig, admin: Admin, targetInstagramUserId?: string): Promise<string> {
+  if (targetInstagramUserId && !/^\d{10,25}$/u.test(targetInstagramUserId)) throw new IntegrationFailure('unexpected_account');
   const state = randomUrlSafe();
   await insertOAuthState(config, {
     stateHash: await sha256(state),
     ownerUserId: admin.userId,
     sessionHash: await sha256(admin.sessionId),
     expiresAt: new Date(Date.now() + STATE_TTL_MS).toISOString(),
+    targetInstagramUserId,
   });
   const url = new URL('https://www.instagram.com/oauth/authorize');
   url.searchParams.set('client_id', config.instagramAppId);
@@ -51,7 +53,7 @@ export async function beginInstagramAuthorization(config: InstagramConfig, admin
   return url.toString();
 }
 
-export async function validateAndConsumeState(config: InstagramConfig, admin: Admin, state: string | null): Promise<void> {
+export async function validateAndConsumeState(config: InstagramConfig, admin: Admin, state: string | null): Promise<string | null> {
   if (!state || !/^[A-Za-z0-9_-]{43}$/u.test(state)) throw new IntegrationFailure('invalid_state');
   const consumed = await consumeOAuthState(config, {
     stateHash: await sha256(state),
@@ -60,6 +62,7 @@ export async function validateAndConsumeState(config: InstagramConfig, admin: Ad
     now: new Date().toISOString(),
   });
   if (!consumed) throw new IntegrationFailure('invalid_state');
+  return consumed.targetInstagramUserId;
 }
 
 async function exchangeCode(config: InstagramConfig, code: string): Promise<ShortToken> {
@@ -98,23 +101,26 @@ async function exchangeLongLived(config: InstagramConfig, shortToken: string): P
 async function getInstagramProfile(token: string): Promise<Profile> {
   const url = new URL('https://graph.instagram.com/v26.0/me');
   url.searchParams.set('fields', 'user_id,username,account_type');
-  url.searchParams.set('access_token', token);
-  const value = await metaJson<Profile | { data: Profile[] }>(url, { method: 'GET' }, 'account_lookup_failed');
+  const value = await metaJson<Profile | { data: Profile[] }>(url, {
+    method: 'GET', headers: { Authorization: `Bearer ${token}` },
+  }, 'account_lookup_failed');
   const profile = firstData(value);
   if (!profile.user_id || !profile.username || !profile.account_type) throw new IntegrationFailure('account_lookup_failed');
   return profile;
 }
 
-export async function finishInstagramAuthorization(config: InstagramConfig, admin: Admin, code: string | null): Promise<void> {
+export async function finishInstagramAuthorization(config: InstagramConfig, admin: Admin, code: string | null,
+  targetInstagramUserId?: string | null): Promise<void> {
   if (!code || code.length > 4096) throw new IntegrationFailure('missing_code');
   const shortToken = await exchangeCode(config, code);
   const longToken = await exchangeLongLived(config, shortToken.access_token);
   const profile = await getInstagramProfile(longToken.access_token);
   const normalizedType = profile.account_type.toUpperCase();
   if (
-    profile.user_id !== config.expectedAccountId ||
-    profile.username.toLowerCase() !== config.expectedUsername ||
-    !['BUSINESS', 'MEDIA_CREATOR', 'CREATOR'].includes(normalizedType)
+    !/^\d{10,25}$/u.test(profile.user_id) ||
+    !/^[A-Za-z0-9._]{1,30}$/u.test(profile.username) ||
+    !['BUSINESS', 'MEDIA_CREATOR', 'CREATOR'].includes(normalizedType) ||
+    (targetInstagramUserId && profile.user_id !== targetInstagramUserId)
   ) {
     throw new IntegrationFailure('unexpected_account');
   }

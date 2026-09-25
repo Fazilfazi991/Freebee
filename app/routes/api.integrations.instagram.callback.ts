@@ -10,9 +10,9 @@ export async function loader({ request, context }: LoaderFunctionArgs) {
   const query = new URL(request.url).searchParams;
   const headers = privateHeaders(admin);
   try {
-    await validateAndConsumeState(config, admin, query.get('state'));
+    const targetInstagramUserId = await validateAndConsumeState(config, admin, query.get('state'));
     if (query.has('error')) throw new IntegrationFailure('authorization_denied');
-    await finishInstagramAuthorization(config, admin, query.get('code'));
+    await finishInstagramAuthorization(config, admin, query.get('code'), targetInstagramUserId);
     return redirect('/dashboard/integrations/instagram?connected=1', { headers });
   } catch (error) {
     const allowed = new Set([
