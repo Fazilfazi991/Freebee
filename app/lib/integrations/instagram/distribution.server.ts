@@ -44,12 +44,9 @@ function addLocalDays(localDate: string, days: number): string {
   return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
 }
 
-async function rankedCandidates(config: InstagramConfig, account: ConnectionRow, ownerId: string,
-  seed: string): Promise<ContentRow[]> {
-  const [content, accountAssignments, allAssignments] = await Promise.all([
-    listContent(config, ownerId), listAssignments(config, ownerId, { accountId: account.id }),
-    account.ordering_mode === 'smart_random' ? listAssignments(config, ownerId) : Promise.resolve([]),
-  ]);
+async function rankedCandidates(account: ConnectionRow, content: ContentRow[],
+  allAssignments: Assignment[], seed: string): Promise<ContentRow[]> {
+  const accountAssignments = allAssignments.filter((assignment) => assignment.instagram_account_id === account.id);
   const used = new Set(accountAssignments.map((assignment) => assignment.content_id));
   const candidates = content.filter((item) => item.status === 'ready' && !used.has(item.id));
   if (account.ordering_mode === 'sequential') return candidates.sort((a, b) => a.content_number - b.content_number);
@@ -87,15 +84,17 @@ export async function assignContentToAccount(config: InstagramConfig, ownerId: s
 }
 
 export async function planPostingSlots(config: InstagramConfig, ownerId: string, now = new Date(),
-  horizonHours = 36): Promise<Assignment[]> {
+  horizonHours = 36, maxPlans = 10): Promise<Assignment[]> {
+  if (!Number.isSafeInteger(maxPlans) || maxPlans < 1 || maxPlans > 50) throw new IntegrationFailure('invalid_plan_limit');
   const settings = await getPublishingSettings(config);
   if (settings.pause_all) return [];
-  const [accounts, slots, existing] = await Promise.all([
-    listInstagramAccounts(config, ownerId), listPostingSlots(config, ownerId), listAssignments(config, ownerId),
+  const [accounts, slots, existing, content] = await Promise.all([
+    listInstagramAccounts(config, ownerId), listPostingSlots(config, ownerId),
+    listAssignments(config, ownerId), listContent(config, ownerId),
   ]);
   const planned: Assignment[] = [];
   const horizon = now.getTime() + horizonHours * 3600_000;
-  for (const account of accounts) {
+  accountLoop: for (const account of accounts) {
     if (account.status !== 'connected' || !account.posting_enabled || !isValidTimezone(account.timezone ?? '')) continue;
     const accountSlots = slots.filter((slot) => slot.instagram_account_id === account.id && slot.enabled)
       .slice(0, account.posts_per_day ?? 2);
@@ -112,7 +111,7 @@ export async function planPostingSlots(config: InstagramConfig, ownerId: string,
         const jitter = Number.parseInt((await sha256(`${account.id}:${slot.id}:${localDate}`)).slice(0, 8), 16) % 20;
         const scheduledAt = new Date(due.getTime() + jitter * 60_000);
         if (scheduledAt.getTime() < now.getTime() || scheduledAt.getTime() > horizon) continue;
-        const candidates = await rankedCandidates(config, account, ownerId, `${slot.id}:${localDate}`);
+        const candidates = await rankedCandidates(account, content, existing, `${slot.id}:${localDate}`);
         for (const content of candidates.slice(0, 3)) {
           try {
             const assignment = await createAssignment(config, ownerId, { accountId: account.id,
@@ -120,6 +119,8 @@ export async function planPostingSlots(config: InstagramConfig, ownerId: string,
               coverPath: content.cover_storage_path, slotId: slot.id, localDate,
               scheduledAt: scheduledAt.toISOString(), orderPosition: content.content_number });
             planned.push(assignment);
+            existing.push(assignment);
+            if (planned.length >= maxPlans) break accountLoop;
             break;
           } catch (error) {
             if (!(error instanceof IntegrationFailure) || error.code !== 'duplicate_assignment') throw error;

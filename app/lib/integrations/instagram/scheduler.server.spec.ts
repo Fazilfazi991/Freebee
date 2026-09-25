@@ -43,7 +43,7 @@ describe('Instagram scheduler safety gate', () => {
     vi.mocked(getPublishingSettings).mockResolvedValue({ singleton: true, auto_publish: false,
       pause_all: false, updated_at: now.toISOString() });
     await runInstagramSchedulerTick(config, now);
-    expect(planPostingSlots).toHaveBeenCalledWith(config, 'admin', now);
+    expect(planPostingSlots).toHaveBeenCalledWith(config, 'admin', now, 36, 5);
     expect(listWorkAssignments).not.toHaveBeenCalled();
     expect(prepareInstagramPublication).not.toHaveBeenCalled();
     expect(publishInstagramPublication).not.toHaveBeenCalled();

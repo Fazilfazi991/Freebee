@@ -15,7 +15,7 @@ export async function runInstagramSchedulerTick(config: InstagramConfig, now = n
     skipped: 0, failed: 0, autoPublish: settings.auto_publish, paused: settings.pause_all };
   if (settings.pause_all) return summary;
   const ownerId = config.adminUserId;
-  summary.planned = (await planPostingSlots(config, ownerId, now)).length;
+  summary.planned = (await planPostingSlots(config, ownerId, now, 36, 5)).length;
   if (!settings.auto_publish) return summary;
   const work = await listWorkAssignments(config, ownerId, now, 5);
   const touchedAccounts = new Set<string>();

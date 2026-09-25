@@ -107,8 +107,8 @@ export default function InstagramOverview() {
     <section className="ig-panel ig-overview-bottom"><div className="ig-section-head"><h2>Setup progress</h2><a href="/dashboard/instagram/accounts">Manage accounts</a></div>
       <p>The first Instagram API publishing test is complete. Future content uses the private library and account schedules.</p>
       {legacyAttempt && <p className="ig-hint">Test Reel: {legacyAttempt.mediaId} · {readableDate(legacyAttempt.publishedAt)} · caption “{legacyAttempt.caption}”</p>}
-      <Form method="post"><input type="hidden" name="intent" value="plan" /><button className="ig-button" disabled={busy}>Plan next 36 hours</button></Form>
-      <p className="ig-hint">Planning records assignments only. Global auto publish remains {settings.auto_publish ? 'on' : 'off'}.</p>
+      <Form method="post"><input type="hidden" name="intent" value="plan" /><button className="ig-button" disabled={busy}>Plan next batch</button></Form>
+      <p className="ig-hint">Each click plans up to 10 posts within the next 36 hours. Global auto publish remains {settings.auto_publish ? 'on' : 'off'}.</p>
       <a className="ig-text-link" href="/dashboard/instagram/test">View original API test</a>
     </section>
   </InstagramShell>;
